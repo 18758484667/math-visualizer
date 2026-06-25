@@ -1685,56 +1685,80 @@ const WORD_PROBLEM_EXAMPLES = {
 
   'age-problem': [
     {
-      desc: '题目：爸爸今年35岁，小明今年5岁。几年后爸爸年龄是小明的3倍？',
+      desc: '第①步：画出两人的年龄线段 — 爸爸35岁，小明5岁',
       draw(ctx, W, H) {
-        drawCenteredText(ctx, '👨 年龄问题', W / 2, 40, 'bold 22px system-ui', '#1a1d26');
-        // Dad
-        drawRoundRect(ctx, 60, 80, 140, 120, 8, '#fff', '#4c6ef5');
-        drawCenteredText(ctx, '👨 爸爸', 130, 110, 'bold 18px system-ui', '#1a1d26');
-        drawCenteredText(ctx, '现在 35 岁', 130, 145, '16px system-ui', '#4c6ef5');
-        drawCenteredText(ctx, 'x 年后：35+x 岁', 130, 175, '14px system-ui', '#9ca3af');
-        // Kid
-        drawRoundRect(ctx, W - 200, 80, 140, 120, 8, '#fff', '#22b8cf');
-        drawCenteredText(ctx, '👦 小明', W - 130, 110, 'bold 18px system-ui', '#1a1d26');
-        drawCenteredText(ctx, '现在 5 岁', W - 130, 145, '16px system-ui', '#0ca5b0');
-        drawCenteredText(ctx, 'x 年后：5+x 岁', W - 130, 175, '14px system-ui', '#9ca3af');
-        drawCenteredText(ctx, '列方程：35 + x = 3(5 + x)', W / 2, 240, 'bold 17px system-ui', '#1a1d26');
+        drawCenteredText(ctx, '👨👦 年龄问题 · 线段法', W / 2, 35, 'bold 20px system-ui', '#1a1d26');
+        // Dad's age bar
+        const barY1 = 80, barY2 = 200, leftX = 100;
+        drawCenteredText(ctx, '爸爸 35岁', leftX - 20, barY1 + 15, 'bold 16px system-ui', '#4c6ef5');
+        ctx.fillStyle = '#4c6ef5';
+        ctx.fillRect(leftX, barY1, 35 * 8, 36);
+        drawRoundRect(ctx, leftX, barY1, 35 * 8, 36, 4, null, '#364fc7');
+        // Mark every 5 years on dad bar
+        for (let i = 5; i <= 35; i += 5) {
+          ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(leftX + i * 8, barY1); ctx.lineTo(leftX + i * 8, barY1 + 36); ctx.stroke();
+        }
+        // Kid's age bar
+        drawCenteredText(ctx, '小明 5岁', leftX - 20, barY2 + 15, 'bold 16px system-ui', '#22b8cf');
+        ctx.fillStyle = '#22b8cf';
+        ctx.fillRect(leftX, barY2, 5 * 8, 36);
+        drawRoundRect(ctx, leftX, barY2, 5 * 8, 36, 4, null, '#0ca5b0');
+        // Age difference highlight
+        ctx.setLineDash([6, 4]); ctx.strokeStyle = '#e03131'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(leftX + 5 * 8, barY2 + 36); ctx.lineTo(leftX + 35 * 8, barY1); ctx.stroke();
+        ctx.setLineDash([]);
+        drawCenteredText(ctx, '年龄差 = 35 - 5 = 30 岁（永远不变！）', W / 2 + 60, 150, 'bold 16px system-ui', '#e03131');
+        drawCenteredText(ctx, '💡 无论过多少年，爸爸永远比小明大30岁', W / 2, 260, '14px system-ui', '#5a6070');
       }
     },
     {
-      desc: '解方程：35+x = 15+3x → 35-15 = 3x-x → 20 = 2x → x=10',
+      desc: '第②步：爸爸是小明的3倍时，30岁 = 2份小明 → 小明=15岁',
       draw(ctx, W, H) {
-        drawCenteredText(ctx, '📐 解方程', W / 2, 40, 'bold 20px system-ui', '#1a1d26');
-        const steps = [
-          '35 + x = 3(5 + x)',
-          '35 + x = 15 + 3x',
-          '35 - 15 = 3x - x',
-          '20 = 2x',
-          'x = 10'
-        ];
-        steps.forEach((s, i) => {
-          const y = 90 + i * 48;
-          ctx.fillStyle = i === 4 ? '#e6f7ee' : '#fff';
-          ctx.strokeStyle = i === 4 ? '#2b9e44' : '#e0e3e8';
-          drawRoundRect(ctx, W / 2 - 160, y - 5, 320, 38, 6, ctx.fillStyle, ctx.strokeStyle);
-          drawCenteredText(ctx, s, W / 2, y + 14, i === 4 ? 'bold 17px system-ui' : '16px system-ui', i === 4 ? '#2b9e44' : '#1a1d26');
-        });
+        drawCenteredText(ctx, '📏 3倍关系分析', W / 2, 35, 'bold 20px system-ui', '#1a1d26');
+        // Visual: 3 segments for dad, 1 for kid
+        const segW = 80, startX = 60, yDad = 90, yKid = 210;
+        // Dad's 3 segments
+        ctx.fillStyle = '#4c6ef5';
+        for (let i = 0; i < 3; i++) {
+          ctx.fillRect(startX + i * segW, yDad, segW - 4, 40);
+          drawRoundRect(ctx, startX + i * segW, yDad, segW - 4, 40, 4, null, '#364fc7');
+        }
+        drawCenteredText(ctx, '爸爸 = 3 份', startX + segW * 1.5, yDad - 16, 'bold 15px system-ui', '#4c6ef5');
+        // Kid's 1 segment
+        ctx.fillStyle = '#22b8cf';
+        ctx.fillRect(startX, yKid, segW - 4, 40);
+        drawRoundRect(ctx, startX, yKid, segW - 4, 40, 4, null, '#0ca5b0');
+        drawCenteredText(ctx, '小明 = 1 份', startX + segW * 0.5, yKid - 16, 'bold 15px system-ui', '#22b8cf');
+        // Difference arrow (2 segments)
+        drawArrow(ctx, startX + segW, yKid + 60, startX + segW * 3, yDad - 10, '#e03131');
+        drawCenteredText(ctx, '年龄差 30 岁 = 2 份', startX + segW * 2.5, 160, 'bold 18px system-ui', '#e03131');
+        drawCenteredText(ctx, '1 份 = 30 ÷ 2 = 15 岁', W / 2 + 20, 280, 'bold 20px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '小明现在5岁 → 15-5=10年后', W / 2 + 20, 310, 'bold 17px system-ui', '#5a6070');
       }
     },
     {
-      desc: '答案：10年后，爸爸45岁，小明15岁，45=3×15 ✓',
+      desc: '✅ 答案：10年后，爸爸45岁（3×15），小明15岁',
       draw(ctx, W, H) {
-        drawCenteredText(ctx, '✅ 答案：10 年后', W / 2, 50, 'bold 22px system-ui', '#2b9e44');
-        // After 10 years
-        drawRoundRect(ctx, 70, 100, 150, 100, 8, '#e6f0ff', '#4c6ef5');
-        drawCenteredText(ctx, '👨 爸爸', 145, 125, 'bold 18px system-ui', '#1a1d26');
-        drawCenteredText(ctx, '35 + 10 = 45 岁', 145, 160, 'bold 16px system-ui', '#4c6ef5');
-        drawRoundRect(ctx, W - 220, 100, 150, 100, 8, '#e6f7ee', '#22b8cf');
-        drawCenteredText(ctx, '👦 小明', W - 145, 125, 'bold 18px system-ui', '#1a1d26');
-        drawCenteredText(ctx, '5 + 10 = 15 岁', W - 145, 160, 'bold 16px system-ui', '#0ca5b0');
-        drawArrow(ctx, 235, 150, W - 235, 150, '#4c6ef5');
-        drawCenteredText(ctx, '45 = 3 × 15 ✓', W / 2, 230, 'bold 18px system-ui', '#2b9e44');
-        drawCenteredText(ctx, '10 年后爸爸年龄正好是小明的 3 倍', W / 2, 265, '14px system-ui', '#9ca3af');
+        drawCenteredText(ctx, '✅ 验证', W / 2, 35, 'bold 22px system-ui', '#2b9e44');
+        // Dad bar
+        const barY1 = 90, barY2 = 200, leftX = 100;
+        ctx.fillStyle = '#4c6ef5';
+        ctx.fillRect(leftX, barY1, 45 * 6, 36);
+        drawRoundRect(ctx, leftX, barY1, 45 * 6, 36, 4, null, '#364fc7');
+        drawCenteredText(ctx, '👨 爸爸 45岁', leftX + 45 * 3, barY1 + 18, 'bold 16px system-ui', '#fff');
+        // Kid bar
+        ctx.fillStyle = '#22b8cf';
+        ctx.fillRect(leftX, barY2, 15 * 6, 36);
+        drawRoundRect(ctx, leftX, barY2, 15 * 6, 36, 4, null, '#0ca5b0');
+        drawCenteredText(ctx, '👦 小明 15岁', leftX + 15 * 3, barY2 + 18, 'bold 16px system-ui', '#fff');
+        // Arrow showing ratio
+        drawArrow(ctx, leftX + 15 * 6 + 10, barY2 + 18, leftX + 45 * 6 + 30, barY1 + 18, '#4c6ef5');
+        drawCenteredText(ctx, '45 = 3 × 15 ✓', W / 2, 150, 'bold 20px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '年龄差 45-15=30 始终不变', W / 2, 270, 'bold 16px system-ui', '#5a6070');
+        ctx.fillStyle = '#e6f7ee'; ctx.strokeStyle = '#2b9e44';
+        drawRoundRect(ctx, W / 2 - 70, 300, 140, 36, 18, '#e6f7ee', '#2b9e44');
+        drawCenteredText(ctx, '✅ 10 年后！', W / 2, 318, 'bold 18px system-ui', '#2b9e44');
       }
     },
   ],
@@ -1886,6 +1910,15 @@ const SYSTEM_PROMPT_2D = `你是一个小学数学图解专家。根据用户的
 5. 画布高度 H 约 400-500px，文字和图形各占一半空间
 6. 结论/答案放在画布底部 y=H-70 到 y=H-20 区域
 7. 绝不要在多步之间改变画布布局结构，保持一致的坐标系统
+
+【解题方法 - 优先用图形而非方程】
+- 年龄问题 → 用线段图表示年龄差，强调"年龄差永远不变"
+- 鸡兔同笼 → 用假设法图示：先画全是鸡/兔，再逐步替换
+- 植树问题 → 画道路+树木，标注间距
+- 相遇问题 → 画两地+相向而行的箭头，标注速度
+- 工程问题 → 画进度条或工作量方块
+- 单价问题 → 画价格标签和数量方块
+- 尽量不用方程式！用图形、线段、箭头、方块等直观表示数量关系
 
 【示例应用题】剪纸对折、鸡兔同笼、年龄问题、植树问题、相遇问题、工程问题等
 
