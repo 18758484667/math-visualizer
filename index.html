@@ -936,19 +936,21 @@ body {
   <div class="modal">
     <h3>⚙️ AI API 配置</h3>
     <p class="desc">
-      使用智谱AI GLM-4-Flash 模型生成数学可视化<br>
-      注册即送 <strong>500万 tokens 免费额度</strong>，无需充值
+      支持多个 AI 服务商，选择你已注册的平台即可<br>
+      智谱 / DeepSeek 注册即送免费额度
     </p>
     <div class="form-group">
       <label>AI 服务商</label>
       <select id="api-provider">
         <option value="zhipu">智谱AI (GLM-4-Flash) · 推荐</option>
+        <option value="deepseek">DeepSeek (DeepSeek-V3)</option>
+        <option value="qwen">千问 (Qwen-Turbo)</option>
       </select>
     </div>
     <div class="form-group">
       <label>API Key</label>
       <input type="password" id="api-key-input" placeholder="粘贴你的 API Key...">
-      <div class="form-hint">
+      <div class="form-hint" id="form-hint">
         还没有 Key？<a href="https://open.bigmodel.cn/" target="_blank" rel="noopener">去智谱AI注册 →</a>
       </div>
     </div>
@@ -1010,6 +1012,8 @@ const dom = {
   btnApi: document.getElementById('btn-api-settings'),
   apiModalOverlay: document.getElementById('api-modal-overlay'),
   apiKeyInput: document.getElementById('api-key-input'),
+  apiProvider: document.getElementById('api-provider'),
+  formHint: document.getElementById('form-hint'),
   btnModalSave: document.getElementById('btn-modal-save'),
   btnModalCancel: document.getElementById('btn-modal-cancel'),
   apiDot: document.getElementById('api-dot'),
@@ -1039,24 +1043,70 @@ function showToast(msg, type = 'info') {
   toastTimer = setTimeout(() => dom.toast.classList.remove('show'), 3000);
 }
 
-// ============ API Key Management ============
-function getApiKey() {
-  return localStorage.getItem('mathvis_api_key') || '';
+// ============ Provider Config ============
+const PROVIDERS = {
+  zhipu: {
+    name: '智谱AI',
+    model: 'glm-4-flash',
+    endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+    registerUrl: 'https://open.bigmodel.cn/',
+    registerText: '去智谱AI注册 →',
+    desc: 'GLM-4-Flash · 注册送 500万 tokens',
+  },
+  deepseek: {
+    name: 'DeepSeek',
+    model: 'deepseek-chat',
+    endpoint: 'https://api.deepseek.com/v1/chat/completions',
+    registerUrl: 'https://platform.deepseek.com/',
+    registerText: '去 DeepSeek 注册 →',
+    desc: 'DeepSeek-V3 · 注册送 500万 tokens',
+  },
+  qwen: {
+    name: '千问',
+    model: 'qwen-turbo',
+    endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+    registerUrl: 'https://dashscope.aliyun.com/',
+    registerText: '去阿里云百炼注册 →',
+    desc: 'Qwen-Turbo · 注册送 100万 tokens',
+  },
+};
+
+// ============ API Config Management ============
+function getApiConfig() {
+  return {
+    provider: localStorage.getItem('mathvis_provider') || 'zhipu',
+    apiKey: localStorage.getItem('mathvis_api_key') || '',
+  };
 }
-function setApiKey(key) {
-  localStorage.setItem('mathvis_api_key', key);
+function setApiConfig(provider, apiKey) {
+  localStorage.setItem('mathvis_provider', provider);
+  localStorage.setItem('mathvis_api_key', apiKey);
   updateApiStatus();
 }
 function updateApiStatus() {
-  const hasKey = !!getApiKey();
+  const cfg = getApiConfig();
+  const hasKey = !!cfg.apiKey;
   dom.apiDot.className = `dot ${hasKey ? 'connected' : ''}`;
-  dom.apiStatusText.textContent = hasKey ? 'AI 已就绪' : '未配置 API Key';
+  const p = PROVIDERS[cfg.provider] || PROVIDERS.zhipu;
+  dom.apiStatusText.textContent = hasKey ? `${p.name} 已就绪` : '未配置 API Key';
 }
 updateApiStatus();
 
+// ============ Provider hint updater ============
+function updateProviderHint(providerId) {
+  const p = PROVIDERS[providerId] || PROVIDERS.zhipu;
+  dom.formHint.innerHTML = `还没有 Key？<a href="${p.registerUrl}" target="_blank" rel="noopener">${p.registerText}</a>`;
+}
+dom.apiProvider.addEventListener('change', () => {
+  updateProviderHint(dom.apiProvider.value);
+});
+
 // ============ Modal ============
 dom.btnApi.addEventListener('click', () => {
-  dom.apiKeyInput.value = getApiKey();
+  const cfg = getApiConfig();
+  dom.apiProvider.value = cfg.provider;
+  dom.apiKeyInput.value = cfg.apiKey;
+  updateProviderHint(cfg.provider);
   dom.apiModalOverlay.classList.add('open');
   dom.apiKeyInput.focus();
 });
@@ -1064,11 +1114,13 @@ dom.btnModalCancel.addEventListener('click', () => {
   dom.apiModalOverlay.classList.remove('open');
 });
 dom.btnModalSave.addEventListener('click', () => {
+  const provider = dom.apiProvider.value;
   const key = dom.apiKeyInput.value.trim();
   if (!key) { showToast('请输入 API Key', 'error'); return; }
-  setApiKey(key);
+  setApiConfig(provider, key);
   dom.apiModalOverlay.classList.remove('open');
-  showToast('API Key 已保存', 'success');
+  const p = PROVIDERS[provider];
+  showToast(`${p.name} API Key 已保存`, 'success');
 });
 dom.apiModalOverlay.addEventListener('click', (e) => {
   if (e.target === dom.apiModalOverlay) dom.apiModalOverlay.classList.remove('open');
@@ -1741,8 +1793,6 @@ function setLoading(loading) {
 }
 
 // ============ AI Service ============
-const API_ENDPOINT = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
-const MODEL_NAME = 'glm-4-flash';
 
 const SYSTEM_PROMPT_3D = `你是一个专业的数学3D可视化工程师。根据用户的数学问题描述，生成可执行的 Three.js JavaScript 代码。
 
@@ -1804,8 +1854,9 @@ function getSystemPrompt() {
 }
 
 async function callAI(userMessage) {
-  const apiKey = getApiKey();
-  if (!apiKey) {
+  const cfg = getApiConfig();
+  const provider = PROVIDERS[cfg.provider] || PROVIDERS.zhipu;
+  if (!cfg.apiKey) {
     showToast('请先配置 API Key', 'error');
     dom.btnApi.click();
     return null;
@@ -1813,11 +1864,11 @@ async function callAI(userMessage) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 60000);
   try {
-    const response = await fetch(API_ENDPOINT, {
+    const response = await fetch(provider.endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cfg.apiKey}` },
       body: JSON.stringify({
-        model: MODEL_NAME,
+        model: provider.model,
         messages: [
           { role: 'system', content: getSystemPrompt() },
           { role: 'user', content: buildPrompt(userMessage) },
