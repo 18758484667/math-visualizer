@@ -2366,20 +2366,6 @@ const PLANE_GEOMETRY_EXAMPLES = {
       }
     },
   ],
-      draw(ctx, W, H) {
-        const cx = W / 2, cy = H / 2;
-        drawRoundRect(ctx, cx - 110, cy - 100, 220, 200, 4, '#e8ecf4', '#4c6ef5');
-        ctx.fillStyle = 'rgba(76,110,245,0.12)';
-        ctx.fillRect(cx - 108, cy - 98, 216, 196);
-        ctx.fillStyle = '#e6f7ee'; ctx.strokeStyle = '#2b9e44';
-        drawRoundRect(ctx, cx - 160, cy - 30, 140, 36, 18, '#e6f7ee', '#2b9e44');
-        drawCenteredText(ctx, '✅ 周长=24cm', cx - 90, cy - 12, 'bold 17px system-ui', '#2b9e44');
-        drawRoundRect(ctx, cx + 22, cy - 30, 140, 36, 18, '#e6f7ee', '#2b9e44');
-        drawCenteredText(ctx, '✅ 面积=36cm²', cx + 92, cy - 12, 'bold 17px system-ui', '#2b9e44');
-        drawCenteredText(ctx, '公式: 周长=4a  面积=a²', cx, cy + 130, 'bold 16px system-ui', '#5a6070');
-      }
-    },
-  ],
 
   triangle: [
     {
