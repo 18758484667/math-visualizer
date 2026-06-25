@@ -944,6 +944,7 @@ body {
         <button class="chip" data-example="age-problem">年龄问题</button>
         <button class="chip" data-example="tree-planting">植树问题</button>
         <button class="chip" data-example="meeting-problem">相遇问题</button>
+        <button class="chip" data-example="calendar-weekday">日历星期推算</button>
         <button class="chip" data-example="work-problem">工程问题</button>
       </div>
 
@@ -1852,6 +1853,110 @@ const WORD_PROBLEM_EXAMPLES = {
         drawCenteredText(ctx, '←', W - 73, H / 2 - 18, '14px system-ui', '#fff');
         drawCenteredText(ctx, '相对速度：60 + 40 = 100 km/h', W / 2, H - 70, 'bold 17px system-ui', '#1a1d26');
         drawCenteredText(ctx, '相遇时间：200 ÷ 100 = 2 小时', W / 2, H - 40, 'bold 18px system-ui', '#2b9e44');
+      }
+    },
+  ],
+
+  'calendar-weekday': [
+    {
+      desc: '第①步：画出5月日历，找到5月1日=星期三',
+      draw(ctx, W, H) {
+        const cx = W / 2;
+        drawCenteredText(ctx, '📅 2024年5月', cx, 35, 'bold 22px system-ui', '#1a1d26');
+        // Calendar table
+        const days = ['日','一','二','三','四','五','六'];
+        const colW = 58, rowH = 36, startX = cx - colW * 3.5, startY = 70;
+        // Header row
+        days.forEach((d, i) => {
+          ctx.fillStyle = i === 0 ? '#e03131' : '#5a6070';
+          ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
+          ctx.fillText(d, startX + i * colW + colW / 2, startY + 12);
+        });
+        // May 1 = Wednesday (周3, index 3), so offset = 3
+        // Fill dates
+        let day = 1;
+        // Find May 1 position: 2024 May 1 is Wednesday (index 3)
+        const mayFirst = 3; // Wednesday
+        for (let row = 0; row < 6 && day <= 31; row++) {
+          for (let col = 0; col < 7 && day <= 31; col++) {
+            const x = startX + col * colW, y = startY + 24 + row * rowH;
+            if (row === 0 && col < mayFirst) continue; // empty cells before May 1
+            const isFirst = day === 1;
+            ctx.fillStyle = isFirst ? '#4c6ef5' : '#fff';
+            ctx.strokeStyle = isFirst ? '#4c6ef5' : '#e0e3e8';
+            ctx.lineWidth = isFirst ? 2 : 1;
+            ctx.fillRect(x + 2, y - 18, colW - 4, rowH - 4);
+            ctx.strokeRect(x + 2, y - 18, colW - 4, rowH - 4);
+            ctx.fillStyle = isFirst ? '#fff' : '#1a1d26';
+            ctx.font = (isFirst ? 'bold ' : '') + '14px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText(day.toString(), x + colW / 2, y);
+            day++;
+          }
+        }
+        drawCenteredText(ctx, '🟦 5月1日 ● 星期三', cx, H - 40, 'bold 16px system-ui', '#4c6ef5');
+        drawCenteredText(ctx, '5月有 31 天', cx, H - 18, '14px system-ui', '#9ca3af');
+      }
+    },
+    {
+      desc: '第②步：计算间隔天数 = 5月剩余 + 6月天数 = 30 + 10 = 40天',
+      draw(ctx, W, H) {
+        const cx = W / 2;
+        drawCenteredText(ctx, '📏 计算经过的天数', cx, 35, 'bold 22px system-ui', '#1a1d26');
+        // May: 31 days, minus 1 (May 1 not counted in interval)
+        ctx.fillStyle = '#e8ecf4'; ctx.strokeStyle = '#4c6ef5';
+        drawRoundRect(ctx, 50, 80, 130, 90, 6, '#e8ecf4', '#4c6ef5');
+        drawCenteredText(ctx, '5月', 115, 100, 'bold 16px system-ui', '#4c6ef5');
+        drawCenteredText(ctx, '31 - 1 = 30 天', 115, 140, 'bold 18px system-ui', '#1a1d26');
+        drawCenteredText(ctx, '(1日当天不算)', 115, 160, '12px system-ui', '#9ca3af');
+        // June: 10 days
+        ctx.fillStyle = '#e6f0ff'; ctx.strokeStyle = '#e03131';
+        drawRoundRect(ctx, W - 180, 80, 130, 90, 6, '#e6f0ff', '#e03131');
+        drawCenteredText(ctx, '6月', W - 115, 100, 'bold 16px system-ui', '#e03131');
+        drawCenteredText(ctx, '10 天', W - 115, 140, 'bold 18px system-ui', '#1a1d26');
+        drawCenteredText(ctx, '(1日~10日)', W - 115, 160, '12px system-ui', '#9ca3af');
+        // Plus sign and arrow
+        drawCenteredText(ctx, '+', cx, 125, 'bold 24px system-ui', '#5a6070');
+        drawArrow(ctx, 195, 250, W - 195, 250, '#5a6070');
+        drawCenteredText(ctx, '= 40 天', cx, 230, 'bold 22px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '从5月2日到6月10日，共40天', cx, 275, '15px system-ui', '#5a6070');
+      }
+    },
+    {
+      desc: '第③步：40 ÷ 7 = 5 周余 5 天 → 星期三 + 5 天 = 星期一',
+      draw(ctx, W, H) {
+        const cx = W / 2;
+        drawCenteredText(ctx, '🔄 40 天等于几周几天？', cx, 35, 'bold 22px system-ui', '#1a1d26');
+        // 40 divided into weeks
+        const startX = cx - 280, y = 80, boxW = 75;
+        for (let w = 0; w < 5; w++) {
+          for (let d = 0; d < 7; d++) {
+            const x = startX + w * boxW + d * 6;
+            ctx.fillStyle = '#d2dce8';
+            drawRoundRect(ctx, x, y, boxW - 4, 28, 3, '#d2dce8', '#b0b8c8');
+          }
+          drawCenteredText(ctx, '第' + (w + 1) + '周', startX + w * boxW + 37, y + 42, 'bold 12px system-ui', '#5a6070');
+        }
+        // Remaining 5 days
+        for (let d = 0; d < 5; d++) {
+          const x = startX + 5 * boxW + d * 6;
+          ctx.fillStyle = '#fce4e4'; ctx.strokeStyle = '#e03131';
+          drawRoundRect(ctx, x, y, boxW - 4, 28, 3, '#fce4e4', '#e03131');
+        }
+        drawCenteredText(ctx, '余5天', startX + 5 * boxW + 37, y + 42, 'bold 12px system-ui', '#e03131');
+        // Weekday count
+        const weekNames = ['三', '四', '五', '六', '日', '一', '二'];
+        const weekColors = ['#1a1d26','#5a6070','#5a6070','#5a6070','#e03131','#2b9e44','#5a6070'];
+        drawCenteredText(ctx, '从星期三开始数 5 天：', cx, 160, 'bold 17px system-ui', '#1a1d26');
+        for (let i = 0; i <= 5; i++) {
+          const x = cx - 170 + i * 60;
+          drawCenteredText(ctx, i === 0 ? '三' + ' (0)' : weekNames[i] + (i === 5 ? ' ✓' : ''),
+            x, 200, (i === 5 ? 'bold ' : '') + '18px system-ui', weekColors[i]);
+        }
+        // Final answer
+        drawRoundRect(ctx, cx - 100, 240, 200, 48, 24, '#e6f7ee', '#2b9e44');
+        drawCenteredText(ctx, '✅ 6月10日是星期一！', cx, 264, 'bold 20px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '40 ÷ 7 = 5⋯⋯5 → 周三 + 5天 → 周一', cx, 310, '14px system-ui', '#9ca3af');
       }
     },
   ],
