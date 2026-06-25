@@ -835,6 +835,11 @@ body {
         应用题解析
         <span class="badge">2D</span>
       </div>
+      <div class="nav-item" data-mode="plane-geometry">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><circle cx="12" cy="12" r="3"/></svg>
+        平面几何
+        <span class="badge">2D</span>
+      </div>
     </nav>
 
     <div class="sidebar-footer">
@@ -911,6 +916,17 @@ body {
         <button class="chip" data-example="tree-planting">植树问题</button>
         <button class="chip" data-example="meeting-problem">相遇问题</button>
         <button class="chip" data-example="work-problem">工程问题</button>
+      </div>
+
+      <!-- Plane geometry example chips -->
+      <div class="example-chips hidden-canvas" id="chips-plane-geometry">
+        <div class="chip-label">📏 平面几何示例</div>
+        <button class="chip" data-example="rectangle">长方形周长与面积</button>
+        <button class="chip" data-example="square">正方形周长与面积</button>
+        <button class="chip" data-example="triangle">三角形面积</button>
+        <button class="chip" data-example="circle">圆形周长与面积</button>
+        <button class="chip" data-example="trapezoid">梯形面积</button>
+        <button class="chip" data-example="composite">组合图形面积</button>
       </div>
     </div>
 
@@ -998,6 +1014,7 @@ const dom = {
   topbarGeometry: document.getElementById('topbar-geometry'),
   chipsGeometry: document.getElementById('chips-geometry'),
   chipsWordProblem: document.getElementById('chips-word-problem'),
+  chipsPlaneGeometry: document.getElementById('chips-plane-geometry'),
   stepControls: document.getElementById('step-controls'),
   btnStepPrev: document.getElementById('btn-step-prev'),
   btnStepNext: document.getElementById('btn-step-next'),
@@ -1134,22 +1151,30 @@ function switchMode(mode) {
   });
 
   const isGeometry = mode === 'geometry';
+  const is2D = mode === 'word-problem' || mode === 'plane-geometry';
   dom.threeCanvas.classList.toggle('hidden-canvas', !isGeometry);
   dom.twoDCanvas.classList.toggle('hidden-canvas', isGeometry);
   dom.topbarGeometry.classList.toggle('hidden-canvas', !isGeometry);
   dom.chipsGeometry.classList.toggle('hidden-canvas', !isGeometry);
-  dom.chipsWordProblem.classList.toggle('hidden-canvas', isGeometry);
+  dom.chipsWordProblem.classList.toggle('hidden-canvas', mode !== 'word-problem');
+  dom.chipsPlaneGeometry.classList.toggle('hidden-canvas', mode !== 'plane-geometry');
   dom.stepControls.classList.toggle('hidden-canvas', isGeometry);
 
   if (isGeometry) {
     dom.emptyPromptText.innerHTML = '在底部输入框中描述数学问题<br>AI 将自动生成 3D 可视化场景';
     dom.userInput.placeholder = '描述你想看到的数学场景，例如：一个底面半径3厘米、高5厘米的圆柱体...';
-    // Restart 3D render loop if paused
     renderer.setAnimationLoop(animate3D);
+  } else if (mode === 'plane-geometry') {
+    dom.emptyPromptText.innerHTML = '输入平面几何题<br>AI 会用图形展示周长和面积的计算过程';
+    dom.userInput.placeholder = '例如：一个长8厘米、宽5厘米的长方形，它的周长和面积分别是多少？';
+    renderer.setAnimationLoop(null);
+    clear2DScene();
+    current2DSteps = [];
+    currentStep = 0;
+    updateStepUI();
   } else {
     dom.emptyPromptText.innerHTML = '输入一道应用题<br>AI 会用图形逐步解释解题过程';
     dom.userInput.placeholder = '输入应用题，例如：想要剪出8个手拉手的小人，需要将彩纸对折几次？';
-    // Stop 3D render loop
     renderer.setAnimationLoop(null);
     clear2DScene();
     current2DSteps = [];
@@ -1855,14 +1880,43 @@ const SYSTEM_PROMPT_2D = `你是一个小学数学图解专家。根据用户的
 
 只输出代码块数组，不要解释文字。`;
 
+const SYSTEM_PROMPT_PLANE = `你是一个平面几何图解专家。根据用户的平面图形问题，用 Canvas 2D 图形分步骤展示图形的周长/面积计算过程。
+
+【环境说明】
+- 全局可用函数:
+  * drawRoundRect(ctx, x, y, w, h, r, fillColor, strokeColor) - 圆角矩形
+  * drawCenteredText(ctx, text, x, y, font, color) - 居中文字
+  * drawArrow(ctx, x1, y1, x2, y2, color) - 带箭头线段
+  * W2, H2 - 画布宽度和高度
+- ctx 可直接用来绘制任意图形
+
+【输出格式】
+用 \\\`\\\`\\\`javascript 代码块输出步骤数组:
+[
+  { desc: "步骤描述", draw(ctx, W, H) { /* 绘图代码 */ } },
+  ...
+]
+
+【绘图要求】
+- 画出规则的几何图形（长方形、正方形、圆、三角形、梯形等）
+- 给每条边标注长度，给图形标注周长/面积公式和计算结果
+- 每一步逐步展示：画出图形 → 标注边长 → 列出公式 → 计算周长 → 计算面积
+- 颜色: 图形填充淡色 #e8ecf4，边框 #4c6ef5，标签 #1a1d26，结果 #2b9e44
+
+只输出代码块数组。`;
+
 function buildPrompt(userMessage) {
   if (currentMode === 'word-problem') {
     return `请用 Canvas 2D 图形分步骤解析这道应用题：\n\n${userMessage}`;
+  }
+  if (currentMode === 'plane-geometry') {
+    return `请用 Canvas 2D 图形展示平面几何图形的周长和面积计算过程：\n\n${userMessage}`;
   }
   return `请专注于立体几何的3D展示和参数标注。\n\n${userMessage}`;
 }
 
 function getSystemPrompt() {
+  if (currentMode === 'plane-geometry') return SYSTEM_PROMPT_PLANE;
   return currentMode === 'word-problem' ? SYSTEM_PROMPT_2D : SYSTEM_PROMPT_3D;
 }
 
@@ -2123,6 +2177,214 @@ const GEOMETRY_EXAMPLES = {
   },
 };
 
+// ============ Built-in Plane Geometry Examples (Perimeter & Area) ============
+const PLANE_GEOMETRY_EXAMPLES = {
+  rectangle: [
+    {
+      desc: '长方形 · 长8cm，宽5cm — 画出图形并标注',
+      draw(ctx, W, H) {
+        const cx = W / 2, cy = H / 2;
+        // Rectangle
+        drawRoundRect(ctx, cx - 140, cy - 80, 280, 160, 4, '#e8ecf4', '#4c6ef5');
+        // Labels
+        drawCenteredText(ctx, '长方形', cx, cy - 105, 'bold 22px system-ui', '#1a1d26');
+        // Dimension arrows
+        drawArrow(ctx, cx - 155, cy - 60, cx - 155, cy + 60, '#4c6ef5');
+        drawArrow(ctx, cx - 155, cy + 60, cx - 155, cy - 60, '#4c6ef5');
+        drawCenteredText(ctx, '宽 5cm', cx - 195, cy, 'bold 15px system-ui', '#4c6ef5');
+        drawArrow(ctx, cx - 120, cy + 90, cx + 120, cy + 90, '#e03131');
+        drawArrow(ctx, cx + 120, cy + 90, cx - 120, cy + 90, '#e03131');
+        drawCenteredText(ctx, '长 8cm', cx, cy + 115, 'bold 15px system-ui', '#e03131');
+        drawCenteredText(ctx, '对边相等，四个角都是直角', cx, H - 30, '13px system-ui', '#9ca3af');
+      }
+    },
+    {
+      desc: '周长公式：C = (长+宽) × 2 = (8+5) × 2 = 26cm',
+      draw(ctx, W, H) {
+        const cx = W / 2, cy = H / 2;
+        drawRoundRect(ctx, cx - 140, cy - 80, 280, 160, 4, '#e8ecf4', '#4c6ef5');
+        drawCenteredText(ctx, '周长 = (长+宽) × 2', cx, cy - 105, 'bold 20px system-ui', '#1a1d26');
+        // Highlight perimeter with colored border
+        ctx.strokeStyle = '#4c6ef5'; ctx.lineWidth = 4;
+        ctx.strokeRect(cx - 140, cy - 80, 280, 160);
+        // Formula
+        drawCenteredText(ctx, 'C = (8 + 5) × 2', cx, cy + 30, 'bold 18px system-ui', '#5a6070');
+        drawCenteredText(ctx, 'C = 13 × 2 = 26 cm', cx, cy + 65, 'bold 20px system-ui', '#2b9e44');
+        ctx.fillStyle = '#e6f7ee'; ctx.strokeStyle = '#2b9e44';
+        drawRoundRect(ctx, cx - 80, cy + 95, 160, 40, 20, '#e6f7ee', '#2b9e44');
+        drawCenteredText(ctx, '✅ 周长 = 26厘米', cx, cy + 115, 'bold 18px system-ui', '#2b9e44');
+      }
+    },
+    {
+      desc: '面积公式：S = 长 × 宽 = 8 × 5 = 40cm²',
+      draw(ctx, W, H) {
+        const cx = W / 2, cy = H / 2;
+        drawRoundRect(ctx, cx - 140, cy - 80, 280, 160, 4, '#e8ecf4', '#4c6ef5');
+        // Fill area
+        ctx.fillStyle = 'rgba(76,110,245,0.15)';
+        ctx.fillRect(cx - 138, cy - 78, 276, 156);
+        drawCenteredText(ctx, '面积 = 长 × 宽', cx, cy - 105, 'bold 20px system-ui', '#1a1d26');
+        // Grid to show squares
+        ctx.strokeStyle = 'rgba(76,110,245,0.12)'; ctx.lineWidth = 1;
+        for (let i = 0; i <= 8; i++) ctx.strokeRect(cx - 138 + i * 34.5, cy - 78, 0, 156);
+        for (let j = 0; j <= 5; j++) ctx.strokeRect(cx - 138, cy - 78 + j * 31.2, 276, 0);
+        drawCenteredText(ctx, 'S = 8 × 5 = 40 cm²', cx, cy + 30, 'bold 18px system-ui', '#5a6070');
+        drawCenteredText(ctx, '长 × 宽 = 每行8个 × 5行 = 40个格子', cx, cy + 63, '14px system-ui', '#9ca3af');
+        ctx.fillStyle = '#e6f7ee'; ctx.strokeStyle = '#2b9e44';
+        drawRoundRect(ctx, cx - 80, cy + 95, 160, 40, 20, '#e6f7ee', '#2b9e44');
+        drawCenteredText(ctx, '✅ 面积 = 40平方厘米', cx, cy + 115, 'bold 18px system-ui', '#2b9e44');
+      }
+    },
+  ],
+
+  square: [
+    {
+      desc: '正方形 · 边长6cm — 四边相等',
+      draw(ctx, W, H) {
+        const cx = W / 2, cy = H / 2;
+        drawRoundRect(ctx, cx - 110, cy - 100, 220, 200, 4, '#e8ecf4', '#4c6ef5');
+        drawCenteredText(ctx, '正方形', cx, cy - 125, 'bold 22px system-ui', '#1a1d26');
+        drawArrow(ctx, cx, cy - 80, cx, cy + 80, '#4c6ef5');
+        drawArrow(ctx, cx, cy + 80, cx, cy - 80, '#4c6ef5');
+        drawCenteredText(ctx, '边长', cx + 30, cy, 'bold 14px system-ui', '#4c6ef5');
+        drawArrow(ctx, cx - 90, cy + 110, cx + 90, cy + 110, '#e03131');
+        drawArrow(ctx, cx + 90, cy + 110, cx - 90, cy + 110, '#e03131');
+        drawCenteredText(ctx, '6cm', cx, cy + 135, 'bold 15px system-ui', '#e03131');
+        drawCenteredText(ctx, 'C = 4a = 24cm · S = a² = 36cm²', cx, H - 25, '14px system-ui', '#9ca3af');
+      }
+    },
+    {
+      desc: '周长：C = 4×6 = 24cm | 面积：S = 6×6 = 36cm²',
+      draw(ctx, W, H) {
+        const cx = W / 2, cy = H / 2;
+        drawRoundRect(ctx, cx - 110, cy - 100, 220, 200, 4, '#e8ecf4', '#4c6ef5');
+        ctx.fillStyle = 'rgba(76,110,245,0.12)';
+        ctx.fillRect(cx - 108, cy - 98, 216, 196);
+        ctx.fillStyle = '#e6f7ee'; ctx.strokeStyle = '#2b9e44';
+        drawRoundRect(ctx, cx - 160, cy - 30, 140, 36, 18, '#e6f7ee', '#2b9e44');
+        drawCenteredText(ctx, '✅ 周长=24cm', cx - 90, cy - 12, 'bold 17px system-ui', '#2b9e44');
+        drawRoundRect(ctx, cx + 22, cy - 30, 140, 36, 18, '#e6f7ee', '#2b9e44');
+        drawCenteredText(ctx, '✅ 面积=36cm²', cx + 92, cy - 12, 'bold 17px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '公式: 周长=4a  面积=a²', cx, cy + 130, 'bold 16px system-ui', '#5a6070');
+      }
+    },
+  ],
+
+  triangle: [
+    {
+      desc: '三角形 · 底10cm，高4cm — 面积=底×高÷2',
+      draw(ctx, W, H) {
+        const cx = W / 2, cy = H / 2;
+        // Triangle
+        ctx.fillStyle = '#e8ecf4'; ctx.strokeStyle = '#4c6ef5'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx - 140, cy + 70); ctx.lineTo(cx + 140, cy + 70);
+        ctx.lineTo(cx, cy - 80); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Height dashed line
+        ctx.setLineDash([6, 4]); ctx.strokeStyle = '#e03131'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(cx, cy - 80); ctx.lineTo(cx, cy + 70); ctx.stroke();
+        ctx.setLineDash([]);
+        // Labels
+        drawCenteredText(ctx, '底 = 10cm', cx, cy + 100, 'bold 16px system-ui', '#4c6ef5');
+        drawCenteredText(ctx, '高=4cm', cx + 25, cy - 10, 'bold 14px system-ui', '#e03131');
+        drawCenteredText(ctx, '面积 = 底 × 高 ÷ 2', cx, cy - 115, 'bold 20px system-ui', '#1a1d26');
+        drawCenteredText(ctx, 'S = 10 × 4 ÷ 2 = 20 cm²', cx, H - 30, 'bold 18px system-ui', '#2b9e44');
+      }
+    },
+  ],
+
+  circle: [
+    {
+      desc: '圆形 · 半径4cm — 标注半径和直径',
+      draw(ctx, W, H) {
+        const cx = W / 2, cy = H / 2, r = 120;
+        ctx.fillStyle = '#e8ecf4'; ctx.strokeStyle = '#4c6ef5'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        // Radius line
+        ctx.strokeStyle = '#e03131'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + r, cy); ctx.stroke();
+        // Center dot
+        ctx.fillStyle = '#e03131'; ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+        // Labels
+        drawCenteredText(ctx, 'r = 4cm', cx + r / 2, cy - 20, 'bold 15px system-ui', '#e03131');
+        drawCenteredText(ctx, '直径 d = 2r = 8cm', cx, cy + r + 30, 'bold 14px system-ui', '#5a6070');
+        drawCenteredText(ctx, '圆形', cx, cy - r - 30, 'bold 22px system-ui', '#1a1d26');
+      }
+    },
+    {
+      desc: '周长：C = 2πr = 2×3.14×4 = 25.12cm | 面积：S = πr² = 3.14×16 = 50.24cm²',
+      draw(ctx, W, H) {
+        const cx = W / 2, cy = H / 2, r = 100;
+        ctx.fillStyle = '#e8ecf4'; ctx.strokeStyle = '#4c6ef5'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = 'rgba(76,110,245,0.1)';
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+        // Perimeter highlight
+        ctx.strokeStyle = '#2b9e44'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+        drawCenteredText(ctx, '周长 C = 2πr', cx, -60, 'bold 20px system-ui', '#1a1d26');
+        drawCenteredText(ctx, '= 2 × 3.14 × 4', cx, -30, 'bold 17px system-ui', '#5a6070');
+        drawCenteredText(ctx, '= 25.12 cm', cx, 0, 'bold 20px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '面积 S = πr² = 3.14 × 16', cx, H - 65, 'bold 17px system-ui', '#5a6070');
+        drawCenteredText(ctx, '= 50.24 cm²', cx, H - 35, 'bold 20px system-ui', '#2b9e44');
+      }
+    },
+  ],
+
+  trapezoid: [
+    {
+      desc: '梯形 · 上底4cm，下底8cm，高5cm — 面积=(上底+下底)×高÷2',
+      draw(ctx, W, H) {
+        const cx = W / 2, cy = H / 2;
+        const topW = 120, bottomW = 240, tH = 150;
+        const topLeft = cx - topW / 2, topRight = cx + topW / 2;
+        const botLeft = cx - bottomW / 2, botRight = cx + bottomW / 2;
+        const topY = cy - tH / 2, botY = cy + tH / 2;
+        // Trapezoid
+        ctx.fillStyle = '#e8ecf4'; ctx.strokeStyle = '#4c6ef5'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(topLeft, topY); ctx.lineTo(topRight, topY);
+        ctx.lineTo(botRight, botY); ctx.lineTo(botLeft, botY); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Height dashed
+        ctx.setLineDash([6, 4]); ctx.strokeStyle = '#e03131';
+        ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, botY); ctx.stroke();
+        ctx.setLineDash([]);
+        // Labels
+        drawCenteredText(ctx, '上底4cm', cx, topY - 20, 'bold 14px system-ui', '#4c6ef5');
+        drawCenteredText(ctx, '下底8cm', cx, botY + 25, 'bold 14px system-ui', '#4c6ef5');
+        drawCenteredText(ctx, '高5cm', cx + 20, cy, 'bold 14px system-ui', '#e03131');
+        drawCenteredText(ctx, 'S = (4+8)×5÷2', cx, H - 30, 'bold 17px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '= 30 cm²', cx + 80, H - 30, 'bold 17px system-ui', '#2b9e44');
+      }
+    },
+  ],
+
+  composite: [
+    {
+      desc: 'L形组合图形 · 分割成两个长方形分别计算',
+      draw(ctx, W, H) {
+        const cx = W / 2, cy = H / 2;
+        // Big rectangle
+        drawRoundRect(ctx, cx - 120, cy - 100, 150, 200, 4, '#e8ecf4', '#4c6ef5');
+        drawCenteredText(ctx, 'A', cx - 80, cy, 'bold 18px system-ui', '#4c6ef5');
+        drawCenteredText(ctx, '6×10', cx - 50, cy - 45, 'bold 14px system-ui', '#5a6070');
+        drawCenteredText(ctx, '=60cm²', cx - 50, cy - 25, 'bold 14px system-ui', '#2b9e44');
+        // Small rectangle
+        drawRoundRect(ctx, cx + 30, cy - 20, 140, 120, 4, '#e6f0ff', '#4c6ef5');
+        drawCenteredText(ctx, 'B', cx + 60, cy + 40, 'bold 18px system-ui', '#4c6ef5');
+        drawCenteredText(ctx, '7×6', cx + 80, cy - 5, 'bold 14px system-ui', '#5a6070');
+        drawCenteredText(ctx, '=42cm²', cx + 80, cy + 15, 'bold 14px system-ui', '#2b9e44');
+        // Total
+        drawRoundRect(ctx, cx - 30, H - 80, 60, 36, 18, '#e6f7ee', '#2b9e44');
+        drawCenteredText(ctx, '总面积 = 60 + 42 = 102cm²', cx + 90, H - 58, 'bold 18px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '分割法：不规则图形 → 多个规则图形', cx, H - 20, '13px system-ui', '#9ca3af');
+      }
+    },
+  ],
+};
+
 // ============ Chip Click Handlers ============
 dom.allChips.forEach(chip => {
   chip.addEventListener('click', async () => {
@@ -2135,11 +2397,19 @@ dom.allChips.forEach(chip => {
       if (!example) return;
       clear3DScene();
       try {
-        example.fn(); // Direct function call — no CSP issue
+        example.fn();
         showToast(`已加载：${chip.textContent}`, 'info');
       } catch (err) {
         showToast(`加载失败: ${err.message}`, 'error');
       }
+    } else if (currentMode === 'plane-geometry') {
+      const steps = PLANE_GEOMETRY_EXAMPLES[exampleName];
+      if (!steps) return;
+      clear2DScene();
+      setup2DCanvas();
+      show2DSteps(steps);
+      dom.emptyPrompt.classList.add('hidden');
+      showToast(`已加载：${chip.textContent}`, 'info');
     } else {
       const steps = WORD_PROBLEM_EXAMPLES[exampleName];
       if (!steps) return;
@@ -2160,15 +2430,15 @@ window.addEventListener('keydown', (e) => {
     case 't': if (currentMode === 'geometry') topView(); break;
     case 'f': if (currentMode === 'geometry') frontView(); break;
     case 'c': clearScene(); break;
-    case 'arrowleft': if (currentMode === 'word-problem' && currentStep > 0) { currentStep--; drawCurrentStep(); updateStepUI(); } break;
-    case 'arrowright': if (currentMode === 'word-problem' && currentStep < current2DSteps.length - 1) { currentStep++; drawCurrentStep(); updateStepUI(); } break;
+    case 'arrowleft': if (!isGeometry && currentStep > 0) { currentStep--; drawCurrentStep(); updateStepUI(); } break;
+    case 'arrowright': if (!isGeometry && currentStep < current2DSteps.length - 1) { currentStep++; drawCurrentStep(); updateStepUI(); } break;
   }
 });
 
 // ============ Init ============
 console.log('🔮 数学可视化已就绪');
-console.log('  3D模式: R=重置 T=俯视 F=前视 C=清空');
-console.log('  2D模式: ←→ 翻页');
+console.log('  3D几何: R=重置 T=俯视 F=前视 C=清空');
+console.log('  2D模式: ←→ 翻页 | 应用题 / 平面几何');
 console.log('  输入问题 → 回车生成可视化');
 </script>
 
