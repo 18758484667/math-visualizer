@@ -1255,6 +1255,14 @@ function addUserObject(obj) {
   userObjects.push(obj);
 }
 
+// Expose 3D globals for AI-generated code (CSP-safe blob execution)
+window._scene = scene;
+window._camera = camera;
+window._renderer = renderer;
+window._controls = controls;
+window._THREE = THREE;
+window._addUserObject = addUserObject;
+
 function clearScene() {
   if (currentMode === 'geometry') {
     clear3DScene();
@@ -1425,6 +1433,11 @@ function drawCenteredText(ctx, text, x, y, font, color) {
   ctx.textBaseline = 'middle';
   ctx.fillText(text, x, y);
 }
+
+// Expose 2D helpers globally for CSP-safe blob execution
+window._drawRoundRect = drawRoundRect;
+window._drawCenteredText = drawCenteredText;
+window._drawArrow = drawArrow;
 
 // ============ Word Problem Examples ============
 const WORD_PROBLEM_EXAMPLES = {
@@ -1906,38 +1919,54 @@ function extractCode(text) {
   return text.trim();
 }
 
-// ============ Code Execution ============
+// ============ CSP-Safe Code Execution (Blob URL + Script Tag) ============
 function execute3DCode(code) {
-  try {
-    const fn = new Function('scene', 'camera', 'renderer', 'controls', 'THREE', 'addUserObject', code);
-    fn(scene, camera, renderer, controls, THREE, addUserObject);
-    return true;
-  } catch (err) {
-    console.error('3D execution error:', err);
-    throw new Error(`代码执行错误: ${err.message}`);
-  }
+  return new Promise((resolve, reject) => {
+    window.__exec3DError = null;
+    const wrapped = `(function(){
+      var scene=window._scene,camera=window._camera,renderer=window._renderer,
+          controls=window._controls,THREE=window._THREE,addUserObject=window._addUserObject;
+      try{${code}}catch(e){window.__exec3DError=e.message}
+    })()`;
+    const blob = new Blob([wrapped], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const script = document.createElement('script');
+    script.onload = () => {
+      URL.revokeObjectURL(url); script.remove();
+      if (window.__exec3DError) { const e=window.__exec3DError; delete window.__exec3DError; reject(new Error(e)); }
+      else resolve(true);
+    };
+    script.onerror = () => { URL.revokeObjectURL(url); script.remove(); reject(new Error('代码加载失败')); };
+    script.src = url;
+    document.head.appendChild(script);
+  });
 }
 
 function execute2DCode(code) {
-  try {
-    // Parse the code as a steps array
-    const steps = new Function('drawRoundRect', 'drawCenteredText', 'drawArrow', 'W2', 'H2', `
-      return ${code};
-    `)(drawRoundRect, drawCenteredText, drawArrow, W2, H2);
-
-    if (!Array.isArray(steps)) throw new Error('AI 返回的不是有效的步骤数组');
-    return steps;
-  } catch (err) {
-    // Try evaluating as a plain expression
-    try {
-      const steps = eval(code);
-      if (!Array.isArray(steps)) throw new Error('不是一个步骤数组');
-      return steps;
-    } catch (e2) {
-      console.error('2D parse error:', e2);
-      throw new Error(`步骤解析错误: ${err.message}`);
-    }
-  }
+  return new Promise((resolve, reject) => {
+    window.__exec2DResult = null;
+    window.__exec2DError = null;
+    const wrapped = `(function(){
+      var drawRoundRect=window._drawRoundRect,drawCenteredText=window._drawCenteredText,
+          drawArrow=window._drawArrow,W2=window._W2,H2=window._H2;
+      try{window.__exec2DResult=${code}}catch(e){window.__exec2DError=e.message}
+    })()`;
+    const blob = new Blob([wrapped], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const script = document.createElement('script');
+    script.onload = () => {
+      URL.revokeObjectURL(url); script.remove();
+      if (window.__exec2DError) { const e=window.__exec2DError; delete window.__exec2DError; reject(new Error(e)); }
+      else {
+        const result = window.__exec2DResult; delete window.__exec2DResult;
+        if (!Array.isArray(result)) reject(new Error('AI 返回的不是有效的步骤数组'));
+        else resolve(result);
+      }
+    };
+    script.onerror = () => { URL.revokeObjectURL(url); script.remove(); reject(new Error('代码解析失败')); };
+    script.src = url;
+    document.head.appendChild(script);
+  });
 }
 
 // ============ Handle Generation ============
@@ -1955,12 +1984,14 @@ async function handleGenerate(userMessage) {
 
     if (currentMode === 'geometry') {
       clear3DScene();
-      execute3DCode(code);
+      await execute3DCode(code);
       showToast('3D 场景生成成功！拖拽鼠标旋转查看', 'success');
     } else {
       clear2DScene();
       setup2DCanvas();
-      const steps = execute2DCode(code);
+      // Expose W2, H2 globally for blob script
+      window._W2 = W2; window._H2 = H2;
+      const steps = await execute2DCode(code);
       show2DSteps(steps);
       dom.emptyPrompt.classList.add('hidden');
       showToast('图解生成成功！点击下方按钮翻页查看', 'success');
@@ -2101,7 +2132,7 @@ ml('z = x² + y²',0,-0.8,3.5);`,
 
 // ============ Chip Click Handlers ============
 dom.allChips.forEach(chip => {
-  chip.addEventListener('click', () => {
+  chip.addEventListener('click', async () => {
     const exampleName = chip.dataset.example;
     if (!exampleName) return;
     if (isGenerating) return;
@@ -2111,7 +2142,7 @@ dom.allChips.forEach(chip => {
       if (!example) return;
       clear3DScene();
       try {
-        execute3DCode(example.code);
+        await execute3DCode(example.code);
         showToast(`已加载：${chip.textContent}`, 'info');
       } catch (err) {
         showToast(`加载失败: ${err.message}`, 'error');
