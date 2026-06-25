@@ -1506,7 +1506,7 @@ window._drawArrow = drawArrow;
 
 // ============ Word Problem Examples ============
 const WORD_PROBLEM_EXAMPLES = {
-  'paper-dolls': [
+  'paper-dolls': { question: '想要剪出8个手拉手的小人，需要将彩纸对折几次？', steps: [
     {
       desc: '第①步：一张完整的纸，剪出1个手拉手小人',
       draw(ctx, W, H) {
@@ -1643,7 +1643,7 @@ const WORD_PROBLEM_EXAMPLES = {
     },
   ],
 
-  'chicken-rabbit': [
+  'chicken-rabbit': { question: '笼子里鸡和兔共35个头、94只脚，各有几只？', steps: [
     {
       desc: '题目：笼子里鸡和兔共35个头、94只脚，各有几只？',
       draw(ctx, W, H) {
@@ -1719,9 +1719,9 @@ const WORD_PROBLEM_EXAMPLES = {
         }
       }
     },
-  ],
+  ]},
 
-  'age-problem': [
+  'age-problem': { question: '爸爸今年35岁，小明今年5岁。几年后爸爸年龄是小明的3倍？', steps: [
     {
       desc: '第①步：画出两人的年龄线段 — 爸爸35岁，小明5岁',
       draw(ctx, W, H) {
@@ -1799,9 +1799,9 @@ const WORD_PROBLEM_EXAMPLES = {
         drawCenteredText(ctx, '✅ 10 年后！', W / 2, 318, 'bold 18px system-ui', '#2b9e44');
       }
     },
-  ],
+  ]},
 
-  'tree-planting': [
+  'tree-planting': { question: '一条100米的路，每隔5米种一棵树（两端都种），要种多少棵？', steps: [
     {
       desc: '题目：一条100米的路，每隔5米种一棵树（两端都种），要种多少棵？',
       draw(ctx, W, H) {
@@ -1830,9 +1830,9 @@ const WORD_PROBLEM_EXAMPLES = {
         drawCenteredText(ctx, '100 ÷ 5 + 1 = 21 棵', W / 2, H - 40, 'bold 17px system-ui', '#2b9e44');
       }
     },
-  ],
+  ]},
 
-  'meeting-problem': [
+  'meeting-problem': { question: '甲乙相距200km，甲60km/h，乙40km/h，相向而行，几小时后相遇？', steps: [
     {
       desc: '题目：甲乙相距200km，甲速度60km/h，乙速度40km/h，相向而行，几小时后相遇？',
       draw(ctx, W, H) {
@@ -1854,9 +1854,9 @@ const WORD_PROBLEM_EXAMPLES = {
         drawCenteredText(ctx, '相遇时间：200 ÷ 100 = 2 小时', W / 2, H - 40, 'bold 18px system-ui', '#2b9e44');
       }
     },
-  ],
+  ]},
 
-  'work-problem': [
+  'work-problem': { question: '甲单独完成需6天，乙单独需12天。两人合作需几天？', steps: [
     {
       desc: '题目：甲单独完成需6天，乙单独需12天。两人合作需几天？',
       draw(ctx, W, H) {
@@ -1883,7 +1883,7 @@ const WORD_PROBLEM_EXAMPLES = {
         drawCenteredText(ctx, '✅ 答案：4 天', W / 2, H - 62, 'bold 17px system-ui', '#2b9e44');
       }
     },
-  ],
+  ]},
 };
 
 // ============ Loading State ============
@@ -2505,11 +2505,11 @@ dom.allChips.forEach(chip => {
       dom.emptyPrompt.classList.add('hidden');
       showToast(`已加载：${chip.textContent}`, 'info');
     } else {
-      const steps = WORD_PROBLEM_EXAMPLES[exampleName];
-      if (!steps) return;
+      const example = WORD_PROBLEM_EXAMPLES[exampleName];
+      if (!example) return;
       clear2DScene();
       setup2DCanvas();
-      show2DSteps(steps, chip.textContent);
+      show2DSteps(example.steps, example.question);
       dom.emptyPrompt.classList.add('hidden');
       showToast(`已加载：${chip.textContent}`, 'info');
     }
