@@ -1919,54 +1919,36 @@ function extractCode(text) {
   return text.trim();
 }
 
-// ============ CSP-Safe Code Execution (Blob URL + Script Tag) ============
-function execute3DCode(code) {
-  return new Promise((resolve, reject) => {
-    window.__exec3DError = null;
-    const wrapped = `(function(){
-      var scene=window._scene,camera=window._camera,renderer=window._renderer,
-          controls=window._controls,THREE=window._THREE,addUserObject=window._addUserObject;
-      try{${code}}catch(e){window.__exec3DError=e.message}
-    })()`;
-    const blob = new Blob([wrapped], { type: 'application/javascript' });
-    const url = URL.createObjectURL(blob);
-    const script = document.createElement('script');
-    script.onload = () => {
-      URL.revokeObjectURL(url); script.remove();
-      if (window.__exec3DError) { const e=window.__exec3DError; delete window.__exec3DError; reject(new Error(e)); }
-      else resolve(true);
-    };
-    script.onerror = () => { URL.revokeObjectURL(url); script.remove(); reject(new Error('代码加载失败')); };
-    script.src = url;
-    document.head.appendChild(script);
-  });
+// ============ CSP-Safe Code Execution ============
+// Use dynamic import() with Blob URLs — bypasses script-src restrictions
+async function execute3DCode(code) {
+  const wrapped = `export default function(scene,camera,renderer,controls,THREE,addUserObject){"use strict";${code};return true}`;
+  const blob = new Blob([wrapped], { type: 'text/javascript' });
+  const url = URL.createObjectURL(blob);
+  try {
+    const mod = await import(url);
+    URL.revokeObjectURL(url);
+    return mod.default(scene, camera, renderer, controls, THREE, addUserObject);
+  } catch (e) {
+    URL.revokeObjectURL(url);
+    throw new Error(`代码执行错误: ${e.message}`);
+  }
 }
 
-function execute2DCode(code) {
-  return new Promise((resolve, reject) => {
-    window.__exec2DResult = null;
-    window.__exec2DError = null;
-    const wrapped = `(function(){
-      var drawRoundRect=window._drawRoundRect,drawCenteredText=window._drawCenteredText,
-          drawArrow=window._drawArrow,W2=window._W2,H2=window._H2;
-      try{window.__exec2DResult=${code}}catch(e){window.__exec2DError=e.message}
-    })()`;
-    const blob = new Blob([wrapped], { type: 'application/javascript' });
-    const url = URL.createObjectURL(blob);
-    const script = document.createElement('script');
-    script.onload = () => {
-      URL.revokeObjectURL(url); script.remove();
-      if (window.__exec2DError) { const e=window.__exec2DError; delete window.__exec2DError; reject(new Error(e)); }
-      else {
-        const result = window.__exec2DResult; delete window.__exec2DResult;
-        if (!Array.isArray(result)) reject(new Error('AI 返回的不是有效的步骤数组'));
-        else resolve(result);
-      }
-    };
-    script.onerror = () => { URL.revokeObjectURL(url); script.remove(); reject(new Error('代码解析失败')); };
-    script.src = url;
-    document.head.appendChild(script);
-  });
+async function execute2DCode(code) {
+  const wrapped = `export default function(drawRoundRect,drawCenteredText,drawArrow,W2,H2){"use strict";return ${code}}`;
+  const blob = new Blob([wrapped], { type: 'text/javascript' });
+  const url = URL.createObjectURL(blob);
+  try {
+    const mod = await import(url);
+    URL.revokeObjectURL(url);
+    const steps = mod.default(drawRoundRect, drawCenteredText, drawArrow, W2, H2);
+    if (!Array.isArray(steps)) throw new Error('不是有效的步骤数组');
+    return steps;
+  } catch (e) {
+    URL.revokeObjectURL(url);
+    throw new Error(`步骤解析错误: ${e.message}`);
+  }
 }
 
 // ============ Handle Generation ============
@@ -2018,115 +2000,126 @@ dom.userInput.addEventListener('keydown', (e) => {
   }
 });
 
-// ============ Built-in 3D Examples ============
+// ============ Built-in 3D Examples (Pure Functions - No Code Execution) ============
 const GEOMETRY_EXAMPLES = {
   cube: {
-    code: `const size = 4;
-const cubeGeo = new THREE.BoxGeometry(size, size, size);
-const cubeMat = new THREE.MeshStandardMaterial({ color: 0x6c8cff, roughness: 0.3, metalness: 0.1 });
-const cube = new THREE.Mesh(cubeGeo, cubeMat);
-cube.castShadow = true; cube.receiveShadow = true;
-addUserObject(cube);
-const edgesGeo = new THREE.EdgesGeometry(cubeGeo);
-const edgesMat = new THREE.LineBasicMaterial({ color: 0x333333, transparent: true, opacity: 0.4 });
-cube.add(new THREE.LineSegments(edgesGeo, edgesMat));
-const dotGeo = new THREE.SphereGeometry(0.15, 16, 16);
-const dotMat = new THREE.MeshStandardMaterial({ color: 0x4c6ef5, emissive: 0x4c6ef5, emissiveIntensity: 0.5 });
-[[2,2,2],[2,2,-2],[2,-2,2],[2,-2,-2],[-2,2,2],[-2,2,-2],[-2,-2,2],[-2,-2,-2]].forEach(([x,y,z]) => {
-  const dot = new THREE.Mesh(dotGeo, dotMat); dot.position.set(x,y,z); addUserObject(dot);
-});
-function ml(t,x,y,z){
-  const c=document.createElement('canvas');c.width=128;c.height=48;
-  const cx=c.getContext('2d');cx.fillStyle='#1a1d26';cx.font='bold 18px system-ui';
-  cx.textAlign='center';cx.fillText(t,64,24);
-  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));
-  s.position.set(x,y,z);s.scale.set(2,0.75,1);addUserObject(s);
-}
-ml('边长=4cm',0,-3,0);ml('V = a³ = 64cm³',0,3.5,0);`,
+    fn() {
+      const size = 4;
+      const cubeGeo = new THREE.BoxGeometry(size, size, size);
+      const cubeMat = new THREE.MeshStandardMaterial({ color: 0x6c8cff, roughness: 0.3, metalness: 0.1 });
+      const cube = new THREE.Mesh(cubeGeo, cubeMat);
+      cube.castShadow = true; cube.receiveShadow = true;
+      addUserObject(cube);
+      const edgesGeo = new THREE.EdgesGeometry(cubeGeo);
+      cube.add(new THREE.LineSegments(edgesGeo, new THREE.LineBasicMaterial({ color: 0x333, transparent: true, opacity: 0.4 })));
+      const dotGeo = new THREE.SphereGeometry(0.15, 16, 16);
+      const dotMat = new THREE.MeshStandardMaterial({ color: 0x4c6ef5, emissive: 0x4c6ef5, emissiveIntensity: 0.5 });
+      [[2,2,2],[2,2,-2],[2,-2,2],[2,-2,-2],[-2,2,2],[-2,2,-2],[-2,-2,2],[-2,-2,-2]].forEach(([x,y,z]) => {
+        const dot = new THREE.Mesh(dotGeo, dotMat); dot.position.set(x,y,z); addUserObject(dot);
+      });
+      const labelCanvas = document.createElement('canvas'); labelCanvas.width = 128; labelCanvas.height = 48;
+      const lctx = labelCanvas.getContext('2d'); lctx.fillStyle = '#1a1d26'; lctx.font = 'bold 18px system-ui'; lctx.textAlign = 'center';
+      function mkLabel(t,x,y,z) {
+        lctx.clearRect(0,0,128,48); lctx.fillText(t,64,24);
+        const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(labelCanvas), depthTest: false }));
+        s.position.set(x,y,z); s.scale.set(2,0.75,1); addUserObject(s);
+      }
+      mkLabel('边长=4cm',0,-3,0); mkLabel('V = a³ = 64cm³',0,3.5,0);
+    },
   },
 
   cylinder: {
-    code: `const r=3,h=5;
-const g=new THREE.CylinderGeometry(r,r,h,64);
-const m=new THREE.MeshStandardMaterial({color:0x4ecdc4,roughness:0.25,metalness:0.15});
-const cy=new THREE.Mesh(g,m);cy.castShadow=true;cy.receiveShadow=true;addUserObject(cy);
-cy.add(new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:0x333,opacity:0.3,transparent:true})));
-const rl=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-h/2,0),new THREE.Vector3(r,-h/2,0)]),new THREE.LineBasicMaterial({color:0xe03131}));addUserObject(rl);
-const hl=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(r+0.5,-h/2,0),new THREE.Vector3(r+0.5,h/2,0)]),new THREE.LineBasicMaterial({color:0xf08c00}));addUserObject(hl);
-function ml(t,x,y,z){const c=document.createElement('canvas');c.width=256;c.height=64;const cx=c.getContext('2d');cx.fillStyle='#1a1d26';cx.font='bold 18px system-ui';cx.textAlign='center';cx.fillText(t,128,32);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.position.set(x,y,z);s.scale.set(3,0.75,1);addUserObject(s);}
-const v=Math.PI*r*r*h;ml('r=3cm',2,-2.8,0);ml('h=5cm',r+1.5,0,0);ml('V=πr²h='+v.toFixed(1)+'cm³',0,h/2+0.8,0);`,
+    fn() {
+      const r=3,h=5;
+      const g=new THREE.CylinderGeometry(r,r,h,64);
+      const m=new THREE.MeshStandardMaterial({color:0x4ecdc4,roughness:0.25,metalness:0.15});
+      const cy=new THREE.Mesh(g,m);cy.castShadow=true;cy.receiveShadow=true;addUserObject(cy);
+      cy.add(new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:0x333,opacity:0.3,transparent:true})));
+      const rl=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-h/2,0),new THREE.Vector3(r,-h/2,0)]),new THREE.LineBasicMaterial({color:0xe03131}));addUserObject(rl);
+      const hl=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(r+0.5,-h/2,0),new THREE.Vector3(r+0.5,h/2,0)]),new THREE.LineBasicMaterial({color:0xf08c00}));addUserObject(hl);
+      const c=document.createElement('canvas');c.width=256;c.height=64;const cx=c.getContext('2d');cx.font='bold 18px system-ui';cx.textAlign='center';
+      function mk(t,x,y,z){cx.clearRect(0,0,256,64);cx.fillStyle='#1a1d26';cx.fillText(t,128,32);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.position.set(x,y,z);s.scale.set(3,0.75,1);addUserObject(s)}
+      const v=Math.PI*r*r*h;mk('r=3cm',2,-2.8,0);mk('h=5cm',r+1.5,0,0);mk('V=πr²h='+v.toFixed(1)+'cm³',0,h/2+0.8,0);
+    },
   },
 
   sphere: {
-    code: `const r=2.5;
-const sg=new THREE.SphereGeometry(r,64,48);
-const sm=new THREE.MeshStandardMaterial({color:0xff922b,roughness:0.2,metalness:0.1,transparent:true,opacity:0.85});
-const sp=new THREE.Mesh(sg,sm);sp.castShadow=true;sp.receiveShadow=true;addUserObject(sp);
-const rg=new THREE.TorusGeometry(r,0.04,16,100);
-const rm=new THREE.MeshStandardMaterial({color:0x333,emissive:0x333,emissiveIntensity:0.3});
-const ring=new THREE.Mesh(rg,rm);ring.rotation.x=Math.PI/2;addUserObject(ring);
-const ring2=new THREE.Mesh(rg,rm);addUserObject(ring2);
-const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(r,0,0)]),new THREE.LineBasicMaterial({color:0xf08c00}));addUserObject(ln);
-function ml(t,x,y,z){const c=document.createElement('canvas');c.width=300;c.height=64;const cx=c.getContext('2d');cx.fillStyle='#1a1d26';cx.font='bold 16px system-ui';cx.textAlign='center';cx.fillText(t,150,32);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.position.set(x,y,z);s.scale.set(3.5,0.75,1);addUserObject(s);}
-ml('r=2.5cm',1.5,-0.4,0);
-const sa=4*Math.PI*r*r;ml('S=4πr²='+sa.toFixed(1)+'cm²',0,r+1,0);
-const v=(4/3)*Math.PI*r*r*r;ml('V=4/3πr³='+v.toFixed(1)+'cm³',0,-r-1,0);`,
+    fn() {
+      const r=2.5;
+      const sg=new THREE.SphereGeometry(r,64,48);
+      const sm=new THREE.MeshStandardMaterial({color:0xff922b,roughness:0.2,metalness:0.1,transparent:true,opacity:0.85});
+      const sp=new THREE.Mesh(sg,sm);sp.castShadow=true;sp.receiveShadow=true;addUserObject(sp);
+      const rg=new THREE.TorusGeometry(r,0.04,16,100);
+      const rm=new THREE.MeshStandardMaterial({color:0x333,emissive:0x333,emissiveIntensity:0.3});
+      const ring=new THREE.Mesh(rg,rm);ring.rotation.x=Math.PI/2;addUserObject(ring);
+      const ring2=new THREE.Mesh(rg,rm);addUserObject(ring2);
+      const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(r,0,0)]),new THREE.LineBasicMaterial({color:0xf08c00}));addUserObject(ln);
+      const c=document.createElement('canvas');c.width=300;c.height=64;const cx=c.getContext('2d');cx.font='bold 16px system-ui';cx.textAlign='center';
+      function mk(t,x,y,z){cx.clearRect(0,0,300,64);cx.fillStyle='#1a1d26';cx.fillText(t,150,32);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.position.set(x,y,z);s.scale.set(3.5,0.75,1);addUserObject(s)}
+      const sa=4*Math.PI*r*r;mk('r=2.5cm',1.5,-0.4,0);mk('S=4πr²='+sa.toFixed(1)+'cm²',0,r+1,0);
+      const v=(4/3)*Math.PI*r*r*r;mk('V=4/3πr³='+v.toFixed(1)+'cm³',0,-r-1,0);
+    },
   },
 
   cone: {
-    code: `const r=3,h=6;
-const cg=new THREE.ConeGeometry(r,h,64);
-const cm=new THREE.MeshStandardMaterial({color:0xcc5de8,roughness:0.2,metalness:0.1});
-const co=new THREE.Mesh(cg,cm);co.castShadow=true;co.receiveShadow=true;addUserObject(co);
-co.add(new THREE.LineSegments(new THREE.EdgesGeometry(cg),new THREE.LineBasicMaterial({color:0x333,transparent:true,opacity:0.3})));
-const bg=new THREE.TorusGeometry(r,0.06,16,64);
-const br=new THREE.Mesh(bg,new THREE.MeshStandardMaterial({color:0xe03131,emissive:0xe03131,emissiveIntensity:0.3}));
-br.position.y=-h/2;br.rotation.x=Math.PI/2;addUserObject(br);
-const hl=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(r+0.5,-h/2,0),new THREE.Vector3(r+0.5,h/2,0)]),new THREE.LineBasicMaterial({color:0xf08c00}));addUserObject(hl);
-function ml(t,x,y,z){const c=document.createElement('canvas');c.width=256;c.height=56;const cx=c.getContext('2d');cx.fillStyle='#1a1d26';cx.font='bold 16px system-ui';cx.textAlign='center';cx.fillText(t,128,28);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.position.set(x,y,z);s.scale.set(3,0.65,1);addUserObject(s);}
-const v=(1/3)*Math.PI*r*r*h;ml('r=3cm',2,-3.2,0);ml('h=6cm',r+1.5,0,0);ml('V=⅓πr²h='+v.toFixed(1)+'cm³',0,h/2+0.8,0);`,
+    fn() {
+      const r=3,h=6;
+      const cg=new THREE.ConeGeometry(r,h,64);
+      const cm=new THREE.MeshStandardMaterial({color:0xcc5de8,roughness:0.2,metalness:0.1});
+      const co=new THREE.Mesh(cg,cm);co.castShadow=true;co.receiveShadow=true;addUserObject(co);
+      co.add(new THREE.LineSegments(new THREE.EdgesGeometry(cg),new THREE.LineBasicMaterial({color:0x333,transparent:true,opacity:0.3})));
+      const br=new THREE.Mesh(new THREE.TorusGeometry(r,0.06,16,64),new THREE.MeshStandardMaterial({color:0xe03131,emissive:0xe03131,emissiveIntensity:0.3}));br.position.y=-h/2;br.rotation.x=Math.PI/2;addUserObject(br);
+      const hl=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(r+0.5,-h/2,0),new THREE.Vector3(r+0.5,h/2,0)]),new THREE.LineBasicMaterial({color:0xf08c00}));addUserObject(hl);
+      const c=document.createElement('canvas');c.width=256;c.height=56;const cx=c.getContext('2d');cx.font='bold 16px system-ui';cx.textAlign='center';
+      function mk(t,x,y,z){cx.clearRect(0,0,256,56);cx.fillStyle='#1a1d26';cx.fillText(t,128,28);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.position.set(x,y,z);s.scale.set(3,0.65,1);addUserObject(s)}
+      const v=(1/3)*Math.PI*r*r*h;mk('r=3cm',2,-3.2,0);mk('h=6cm',r+1.5,0,0);mk('V=⅓πr²h='+v.toFixed(1)+'cm³',0,h/2+0.8,0);
+    },
   },
 
   'water-tank': {
-    code: `const L=10,W=5,H=4,waterH=3;
-const tg=new THREE.Group();addUserObject(tg);
-const bm=new THREE.MeshStandardMaterial({color:0x7c9bb3,roughness:0.5});
-const bot=new THREE.Mesh(new THREE.BoxGeometry(L,0.2,W),bm);bot.position.y=-H/2;bot.receiveShadow=true;tg.add(bot);
-const wm=new THREE.MeshStandardMaterial({color:0x8cb8d6,roughness:0.2,metalness:0.1,transparent:true,opacity:0.3});
-[[0,0,W/2],[0,0,-W/2],[-L/2,0,0],[L/2,0,0]].forEach(([x,y,z])=>{
-  const w=z!==0?new THREE.BoxGeometry(L,H,0.15):new THREE.BoxGeometry(0.15,H,W);
-  const wall=new THREE.Mesh(w,wm);wall.position.set(x,y,z);tg.add(wall);
-});
-const water=new THREE.Mesh(new THREE.BoxGeometry(L-0.3,waterH,W-0.3),new THREE.MeshStandardMaterial({color:0x4c6ef5,roughness:0.1,metalness:0.2,transparent:true,opacity:0.6}));
-water.position.y=-H/2+waterH/2;water.castShadow=true;tg.add(water);
-const wave=new THREE.Mesh(new THREE.PlaneGeometry(L-0.3,W-0.3),new THREE.MeshStandardMaterial({color:0xa0c4ff,roughness:0.05,metalness:0.3,transparent:true,opacity:0.4,side:THREE.DoubleSide}));
-wave.rotation.x=-Math.PI/2;wave.position.y=-H/2+waterH;tg.add(wave);
-const hl=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(L/2+1,-H/2,0),new THREE.Vector3(L/2+1,-H/2+waterH,0)]),new THREE.LineBasicMaterial({color:0xf08c00}));addUserObject(hl);
-function ml(t,x,y,z){const c=document.createElement('canvas');c.width=300;c.height=56;const cx=c.getContext('2d');cx.fillStyle='#1a1d26';cx.font='bold 16px system-ui';cx.textAlign='center';cx.fillText(t,150,28);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.position.set(x,y,z);s.scale.set(3.5,0.65,1);addUserObject(s);}
-const v=L*W*waterH;ml('水面高=3m',L/2+2,-H/2+1.5,0);ml('水的体积='+L+'×'+W+'×'+waterH+'='+v+'m³',0,H/2+1,0);ml('长=10m',0,-H/2-0.8,0);`,
+    fn() {
+      const L=10,W=5,H=4,waterH=3;
+      const tg=new THREE.Group();addUserObject(tg);
+      const bm=new THREE.MeshStandardMaterial({color:0x7c9bb3,roughness:0.5});
+      const bot=new THREE.Mesh(new THREE.BoxGeometry(L,0.2,W),bm);bot.position.y=-H/2;bot.receiveShadow=true;tg.add(bot);
+      const wm=new THREE.MeshStandardMaterial({color:0x8cb8d6,roughness:0.2,metalness:0.1,transparent:true,opacity:0.3});
+      [[0,0,W/2],[0,0,-W/2],[-L/2,0,0],[L/2,0,0]].forEach(([x,y,z])=>{
+        const w=z!==0?new THREE.BoxGeometry(L,H,0.15):new THREE.BoxGeometry(0.15,H,W);
+        const wall=new THREE.Mesh(w,wm);wall.position.set(x,y,z);tg.add(wall);
+      });
+      const water=new THREE.Mesh(new THREE.BoxGeometry(L-0.3,waterH,W-0.3),new THREE.MeshStandardMaterial({color:0x4c6ef5,roughness:0.1,metalness:0.2,transparent:true,opacity:0.6}));
+      water.position.y=-H/2+waterH/2;water.castShadow=true;tg.add(water);
+      const wave=new THREE.Mesh(new THREE.PlaneGeometry(L-0.3,W-0.3),new THREE.MeshStandardMaterial({color:0xa0c4ff,roughness:0.05,metalness:0.3,transparent:true,opacity:0.4,side:THREE.DoubleSide}));
+      wave.rotation.x=-Math.PI/2;wave.position.y=-H/2+waterH;tg.add(wave);
+      const hl=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(L/2+1,-H/2,0),new THREE.Vector3(L/2+1,-H/2+waterH,0)]),new THREE.LineBasicMaterial({color:0xf08c00}));addUserObject(hl);
+      const c=document.createElement('canvas');c.width=300;c.height=56;const cx=c.getContext('2d');cx.font='bold 16px system-ui';cx.textAlign='center';
+      function mk(t,x,y,z){cx.clearRect(0,0,300,56);cx.fillStyle='#1a1d26';cx.fillText(t,150,28);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.position.set(x,y,z);s.scale.set(3.5,0.65,1);addUserObject(s)}
+      const v=L*W*waterH;mk('水面高=3m',L/2+2,-H/2+1.5,0);mk('水的体积='+L+'×'+W+'×'+waterH+'='+v+'m³',0,H/2+1,0);mk('长=10m',0,-H/2-0.8,0);
+    },
   },
 
   parabola: {
-    code: `const range=3,seg=60;
-const verts=[],cols=[],indices=[];
-for(let i=0;i<=seg;i++){const x=-range+(2*range*i)/seg;
-  for(let j=0;j<=seg;j++){const y=-range+(2*range*j)/seg;const z=(x*x+y*y)/4;
-    verts.push(x,z,y);const t=z/(range*range/2);cols.push(0.3+t*0.7,0.3,1-t*0.7);
-  }}
-for(let i=0;i<seg;i++){for(let j=0;j<seg;j++){
-  const a=i*(seg+1)+j,b=a+1,c=a+seg+1,d=c+1;indices.push(a,b,d,a,d,c);
-}}
-const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
-sg.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));sg.setIndex(indices);sg.computeVertexNormals();
-const sm=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.3,metalness:0.1,side:THREE.DoubleSide,transparent:true,opacity:0.85});
-const surf=new THREE.Mesh(sg,sm);surf.castShadow=true;surf.receiveShadow=true;addUserObject(surf);
-const wf=new THREE.LineSegments(new THREE.WireframeGeometry(sg),new THREE.LineBasicMaterial({color:0x888899,transparent:true,opacity:0.15}));addUserObject(wf);
-const pg=new THREE.PlaneGeometry(6,6);const pm=new THREE.MeshStandardMaterial({color:0xdddde8,roughness:0.8,transparent:true,opacity:0.25,side:THREE.DoubleSide});
-const pl=new THREE.Mesh(pg,pm);pl.rotation.x=0;pl.position.y=-0.05;addUserObject(pl);
-const ap=new THREE.Mesh(new THREE.SphereGeometry(0.12,16,16),new THREE.MeshStandardMaterial({color:0x4c6ef5,emissive:0x4c6ef5,emissiveIntensity:0.8}));
-ap.position.set(0,0,0);addUserObject(ap);
-function ml(t,x,y,z){const c=document.createElement('canvas');c.width=256;c.height=48;const cx=c.getContext('2d');cx.fillStyle='#1a1d26';cx.font='bold 16px system-ui';cx.textAlign='center';cx.fillText(t,128,24);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.position.set(x,y,z);s.scale.set(3,0.6,1);addUserObject(s);}
-ml('z = x² + y²',0,-0.8,3.5);`,
+    fn() {
+      const range=3,seg=60;
+      const verts=[],cols=[],indices=[];
+      for(let i=0;i<=seg;i++){const x=-range+(2*range*i)/seg;
+        for(let j=0;j<=seg;j++){const y=-range+(2*range*j)/seg;const z=(x*x+y*y)/4;
+          verts.push(x,z,y);const t=z/(range*range/2);cols.push(0.3+t*0.7,0.3,1-t*0.7);
+        }}
+      for(let i=0;i<seg;i++){for(let j=0;j<seg;j++){
+        const a=i*(seg+1)+j,b=a+1,c=a+seg+1,d=c+1;indices.push(a,b,d,a,d,c);
+      }}
+      const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+      sg.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));sg.setIndex(indices);sg.computeVertexNormals();
+      const surf=new THREE.Mesh(sg,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.3,metalness:0.1,side:THREE.DoubleSide,transparent:true,opacity:0.85}));
+      surf.castShadow=true;surf.receiveShadow=true;addUserObject(surf);
+      const wf=new THREE.LineSegments(new THREE.WireframeGeometry(sg),new THREE.LineBasicMaterial({color:0x888899,transparent:true,opacity:0.15}));addUserObject(wf);
+      const pl=new THREE.Mesh(new THREE.PlaneGeometry(6,6),new THREE.MeshStandardMaterial({color:0xdddde8,roughness:0.8,transparent:true,opacity:0.25,side:THREE.DoubleSide}));pl.position.y=-0.05;addUserObject(pl);
+      const ap=new THREE.Mesh(new THREE.SphereGeometry(0.12,16,16),new THREE.MeshStandardMaterial({color:0x4c6ef5,emissive:0x4c6ef5,emissiveIntensity:0.8}));addUserObject(ap);
+      const c=document.createElement('canvas');c.width=256;c.height=48;const cx=c.getContext('2d');cx.font='bold 16px system-ui';cx.textAlign='center';
+      cx.fillStyle='#1a1d26';cx.fillText('z = x² + y²',128,24);
+      const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.position.set(0,-0.8,3.5);s.scale.set(3,0.6,1);addUserObject(s);
+    },
   },
 };
 
@@ -2142,7 +2135,7 @@ dom.allChips.forEach(chip => {
       if (!example) return;
       clear3DScene();
       try {
-        await execute3DCode(example.code);
+        example.fn(); // Direct function call — no CSP issue
         showToast(`已加载：${chip.textContent}`, 'info');
       } catch (err) {
         showToast(`加载失败: ${err.message}`, 'error');
