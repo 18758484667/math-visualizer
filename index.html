@@ -1076,7 +1076,7 @@ const dom = {
 
 // ============ State ============
 let currentMode = 'geometry';
-let isGenerating = false;
+let _isGenerating = false;
 let current2DSteps = [];
 let currentStep = 0;
 
@@ -1888,7 +1888,7 @@ const WORD_PROBLEM_EXAMPLES = {
 
 // ============ Loading State ============
 function setLoading(loading) {
-  isGenerating = loading;
+  _isGenerating = loading;
   dom.btnSend.disabled = loading;
   dom.overlay.classList.toggle('visible', loading);
   dom.emptyPrompt.classList.toggle('hidden', loading);
@@ -2102,7 +2102,7 @@ async function execute2DCode(code) {
 
 // ============ Handle Generation ============
 async function handleGenerate(userMessage) {
-  if (isGenerating) return;
+  if (_isGenerating) return;
   if (!userMessage.trim()) return;
 
   setLoading(true);
@@ -2484,7 +2484,7 @@ dom.allChips.forEach(chip => {
   chip.addEventListener('click', async () => {
     const exampleName = chip.dataset.example;
     if (!exampleName) return;
-    if (isGenerating) return;
+    if (_isGenerating) return;
 
     if (currentMode === 'geometry') {
       const example = GEOMETRY_EXAMPLES[exampleName];
