@@ -1949,9 +1949,14 @@ async function callAI(userMessage) {
     clearTimeout(timeoutId);
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
+      const errMsg = err.error?.message || err.error?.code || '';
       if (response.status === 401 || response.status === 403) throw new Error('API Key 无效，请重新配置');
       if (response.status === 429) throw new Error('请求太频繁，请稍后再试');
-      throw new Error(err.error?.message || `API 请求失败 (${response.status})`);
+      if (/insufficient|balance|余额|欠费|quota/i.test(errMsg)) {
+        const p = PROVIDERS[cfg.provider];
+        throw new Error(`${p.name} 账户余额不足，请充值或切换到其他 AI 服务商（左侧 API 设置）`);
+      }
+      throw new Error(errMsg || `API 请求失败 (${response.status})`);
     }
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
