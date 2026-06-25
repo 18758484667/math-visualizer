@@ -443,13 +443,14 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 16;
+  z-index: 14;
   background: linear-gradient(135deg, #eef1ff 0%, #f0f3ff 100%);
   border-bottom: 1px solid var(--border);
   padding: 10px 20px;
   display: flex;
   align-items: center;
   gap: 12px;
+  pointer-events: none;
 }
 .question-banner .qb-icon { font-size: 1.2rem; flex-shrink: 0; }
 .question-banner .qb-text { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); flex: 1; }
@@ -461,7 +462,7 @@ body {
 /* ============ 2D Step Controls ============ */
 .step-controls {
   position: absolute;
-  top: 48px;
+  top: 52px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -804,10 +805,9 @@ body {
 
   .modal { padding: 24px; width: 95vw; }
 
-  .step-controls { padding: 6px 12px; gap: 8px; top: 44px; }
+  .step-controls { padding: 6px 12px; gap: 8px; top: 46px; }
   .step-controls .step-desc { max-width: 180px; font-size: 0.7rem; }
-  .question-banner { padding: 6px 12px; }
-  .question-banner .qb-text { font-size: 0.78rem; }
+  .question-banner { padding: 5px 10px; }
 }
 
 /* ============ Scrollbar ============ */
