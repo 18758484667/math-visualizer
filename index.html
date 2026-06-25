@@ -1426,11 +1426,9 @@ function drawCurrentStep() {
   for (let y = 0; y < H2; y += 40) {
     ctx2d.beginPath(); ctx2d.moveTo(0, y); ctx2d.lineTo(W2, y); ctx2d.stroke();
   }
-  // Cumulative drawing: draw all steps from 0 to currentStep
+  // Draw only the current step (not cumulative)
   try {
-    for (let i = 0; i <= currentStep; i++) {
-      current2DSteps[i].draw(ctx2d, W2, H2);
-    }
+    current2DSteps[currentStep].draw(ctx2d, W2, H2);
   } catch (err) {
     console.error('Draw error:', err);
     ctx2d.fillStyle = '#e03131';
@@ -2299,36 +2297,39 @@ const PLANE_GEOMETRY_EXAMPLES = {
       desc: '周长公式：C = (长+宽) × 2 = (8+5) × 2 = 26cm',
       draw(ctx, W, H) {
         const cx = W / 2, cy = H / 2;
-        // Perimeter highlight (overlay border)
+        // Base shape
+        drawRoundRect(ctx, cx - 140, cy - 80, 280, 160, 4, '#e8ecf4', '#4c6ef5');
+        drawCenteredText(ctx, '长方形', cx, cy - 105, 'bold 22px system-ui', '#1a1d26');
+        // Perimeter highlight
         ctx.strokeStyle = '#4c6ef5'; ctx.lineWidth = 4;
         ctx.strokeRect(cx - 140, cy - 80, 280, 160);
-        // Formula area (cover old title)
-        ctx.fillStyle = '#fff'; ctx.fillRect(cx - 180, cy - 125, 360, 35);
-        drawCenteredText(ctx, '周长 = (长+宽) × 2', cx, cy - 108, 'bold 20px system-ui', '#1a1d26');
-        drawCenteredText(ctx, 'C = (8 + 5) × 2 = 26 cm', cx, cy + 40, 'bold 20px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '周长 = (长+宽) × 2', cx, cy + 40, 'bold 20px system-ui', '#1a1d26');
+        drawCenteredText(ctx, 'C = (8+5) × 2 = 26 cm', cx, cy + 75, 'bold 20px system-ui', '#2b9e44');
         ctx.fillStyle = '#e6f7ee'; ctx.strokeStyle = '#2b9e44';
-        drawRoundRect(ctx, cx - 80, cy + 70, 160, 36, 18, '#e6f7ee', '#2b9e44');
-        drawCenteredText(ctx, '✅ 周长 = 26厘米', cx, cy + 88, 'bold 18px system-ui', '#2b9e44');
+        drawRoundRect(ctx, cx - 80, cy + 105, 160, 36, 18, '#e6f7ee', '#2b9e44');
+        drawCenteredText(ctx, '✅ 周长 = 26厘米', cx, cy + 123, 'bold 18px system-ui', '#2b9e44');
       }
     },
     {
       desc: '面积公式：S = 长 × 宽 = 8 × 5 = 40cm²',
       draw(ctx, W, H) {
         const cx = W / 2, cy = H / 2;
-        // Area fill overlay
+        // Base shape
+        drawRoundRect(ctx, cx - 140, cy - 80, 280, 160, 4, '#e8ecf4', '#4c6ef5');
+        drawCenteredText(ctx, '长方形', cx, cy - 105, 'bold 22px system-ui', '#1a1d26');
+        // Area fill
         ctx.fillStyle = 'rgba(76,110,245,0.15)';
         ctx.fillRect(cx - 138, cy - 78, 276, 156);
-        // Grid to show unit squares
+        // Grid
         ctx.strokeStyle = 'rgba(76,110,245,0.12)'; ctx.lineWidth = 1;
         for (let i = 0; i <= 8; i++) ctx.strokeRect(cx - 138 + i * 34.5, cy - 78, 0, 156);
         for (let j = 0; j <= 5; j++) ctx.strokeRect(cx - 138, cy - 78 + j * 31.2, 276, 0);
-        ctx.fillStyle = '#fff'; ctx.fillRect(cx - 180, cy - 125, 360, 35);
-        drawCenteredText(ctx, '面积 = 长 × 宽', cx, cy - 108, 'bold 20px system-ui', '#1a1d26');
-        drawCenteredText(ctx, 'S = 8 × 5 = 40 cm²', cx, cy + 40, 'bold 18px system-ui', '#5a6070');
-        drawCenteredText(ctx, '每行8个格子 × 5行 = 40个格子', cx, cy + 70, '14px system-ui', '#9ca3af');
+        drawCenteredText(ctx, '面积 = 长 × 宽', cx, cy + 40, 'bold 20px system-ui', '#1a1d26');
+        drawCenteredText(ctx, 'S = 8 × 5 = 40 cm²', cx, cy + 75, 'bold 20px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '每行8个格子 × 5行 = 40个格子', cx, cy + 105, '13px system-ui', '#9ca3af');
         ctx.fillStyle = '#e6f7ee'; ctx.strokeStyle = '#2b9e44';
-        drawRoundRect(ctx, cx - 80, cy + 95, 160, 36, 18, '#e6f7ee', '#2b9e44');
-        drawCenteredText(ctx, '✅ 面积 = 40平方厘米', cx, cy + 113, 'bold 18px system-ui', '#2b9e44');
+        drawRoundRect(ctx, cx - 80, cy + 130, 160, 36, 18, '#e6f7ee', '#2b9e44');
+        drawCenteredText(ctx, '✅ 面积 = 40平方厘米', cx, cy + 148, 'bold 18px system-ui', '#2b9e44');
       }
     },
   ],
@@ -2353,10 +2354,12 @@ const PLANE_GEOMETRY_EXAMPLES = {
       desc: '周长：C = 4×6 = 24cm | 面积：S = 6×6 = 36cm²',
       draw(ctx, W, H) {
         const cx = W / 2, cy = H / 2;
+        // Base shape
+        drawRoundRect(ctx, cx - 110, cy - 100, 220, 200, 4, '#e8ecf4', '#4c6ef5');
+        drawCenteredText(ctx, '正方形', cx, cy - 125, 'bold 22px system-ui', '#1a1d26');
         ctx.fillStyle = 'rgba(76,110,245,0.12)';
         ctx.fillRect(cx - 108, cy - 98, 216, 196);
-        ctx.fillStyle = '#fff'; ctx.fillRect(cx - 160, cy - 128, 320, 35);
-        drawCenteredText(ctx, '周长 C = 4a = 24cm', cx, cy - 110, 'bold 20px system-ui', '#1a1d26');
+        // Results
         ctx.fillStyle = '#e6f7ee'; ctx.strokeStyle = '#2b9e44';
         drawRoundRect(ctx, cx - 160, cy - 15, 140, 36, 18, '#e6f7ee', '#2b9e44');
         drawCenteredText(ctx, '✅ 周长=24cm', cx - 90, cy + 3, 'bold 17px system-ui', '#2b9e44');
@@ -2409,13 +2412,16 @@ const PLANE_GEOMETRY_EXAMPLES = {
     {
       desc: '周长：C = 2πr = 2×3.14×4 = 25.12cm | 面积：S = πr² = 3.14×16 = 50.24cm²',
       draw(ctx, W, H) {
-        const cx = W / 2;
-        // Overlay formulas only (circle base stays from step 1)
-        ctx.fillStyle = '#fff'; ctx.fillRect(cx - 160, 0, 320, 80);
-        drawCenteredText(ctx, '周长 C = 2πr', cx, 30, 'bold 20px system-ui', '#1a1d26');
-        drawCenteredText(ctx, '= 2 × 3.14 × 4 = 25.12 cm', cx, 58, 'bold 17px system-ui', '#2b9e44');
-        drawCenteredText(ctx, '面积 S = πr²', cx, H - 72, 'bold 20px system-ui', '#1a1d26');
-        drawCenteredText(ctx, '= 3.14 × 16 = 50.24 cm²', cx, H - 40, 'bold 17px system-ui', '#2b9e44');
+        const cx = W / 2, cy = H / 2, r = 120;
+        // Base circle
+        ctx.fillStyle = '#e8ecf4'; ctx.strokeStyle = '#4c6ef5'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        drawCenteredText(ctx, '圆形', cx, cy - r - 30, 'bold 22px system-ui', '#1a1d26');
+        // Formulas
+        drawCenteredText(ctx, '周长 C = 2πr = 2×3.14×4', cx, cy + r + 40, 'bold 17px system-ui', '#5a6070');
+        drawCenteredText(ctx, '= 25.12 cm', cx, cy + r + 70, 'bold 20px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '面积 S = πr² = 3.14×16', cx, cy + r + 105, 'bold 17px system-ui', '#5a6070');
+        drawCenteredText(ctx, '= 50.24 cm²', cx, cy + r + 135, 'bold 20px system-ui', '#2b9e44');
       }
     },
   ],
