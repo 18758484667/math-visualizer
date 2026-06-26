@@ -42,6 +42,9 @@ const dom = {
   btnModalCancel: document.getElementById('btn-modal-cancel'),
   apiDot: document.getElementById('api-dot'),
   apiStatusText: document.getElementById('api-status-text'),
+  apiEndpoint: document.getElementById('api-endpoint'),
+  apiModel: document.getElementById('api-model'),
+  modelHint: document.getElementById('model-hint'),
   navItems: document.querySelectorAll('.nav-item'),
   allChips: document.querySelectorAll('.chip'),
   toast: document.getElementById('toast'),
@@ -68,6 +71,7 @@ function showToast(msg, type = 'info') {
 }
 
 // ============ Provider Config ============
+// Each provider supplies defaults; user can override endpoint & model freely
 const PROVIDERS = {
   zhipu: {
     name: '智谱AI',
@@ -75,7 +79,7 @@ const PROVIDERS = {
     endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
     registerUrl: 'https://open.bigmodel.cn/',
     registerText: '去智谱AI注册 →',
-    desc: 'GLM-4-Flash · 注册送 500万 tokens',
+    models: 'glm-4-flash / glm-4 / glm-4v / glm-4-plus',
   },
   deepseek: {
     name: 'DeepSeek',
@@ -83,15 +87,95 @@ const PROVIDERS = {
     endpoint: 'https://api.deepseek.com/v1/chat/completions',
     registerUrl: 'https://platform.deepseek.com/',
     registerText: '去 DeepSeek 注册 →',
-    desc: 'DeepSeek-V3 · 注册送 500万 tokens',
+    models: 'deepseek-chat / deepseek-reasoner',
   },
   qwen: {
-    name: '千问',
+    name: '阿里千问',
     model: 'qwen-turbo',
     endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
     registerUrl: 'https://dashscope.aliyun.com/',
     registerText: '去阿里云百炼注册 →',
-    desc: 'Qwen-Turbo · 注册送 100万 tokens',
+    models: 'qwen-turbo / qwen-plus / qwen-max / qwen3.5-flash',
+  },
+  hunyuan: {
+    name: '腾讯混元',
+    model: 'hunyuan-lite',
+    endpoint: 'https://api.hunyuan.cloud.tencent.com/v1/chat/completions',
+    registerUrl: 'https://cloud.tencent.com/product/hunyuan',
+    registerText: '去腾讯云混元注册 →',
+    models: 'hunyuan-lite / hunyuan-standard / hunyuan-pro / hunyuan-turbo',
+  },
+  moonshot: {
+    name: '月之暗面',
+    model: 'moonshot-v1-8k',
+    endpoint: 'https://api.moonshot.cn/v1/chat/completions',
+    registerUrl: 'https://platform.moonshot.cn/',
+    registerText: '去 Moonshot 注册 →',
+    models: 'moonshot-v1-8k / moonshot-v1-32k / moonshot-v1-128k / kimi-k2.7',
+  },
+  minimax: {
+    name: 'MiniMax',
+    model: 'abab6.5s-chat',
+    endpoint: 'https://api.minimax.chat/v1/text/chatcompletion_v2',
+    registerUrl: 'https://platform.minimaxi.com/',
+    registerText: '去 MiniMax 注册 →',
+    models: 'abab6.5s-chat / abab6.5-chat / abab7-chat-preview',
+  },
+  baichuan: {
+    name: '百川智能',
+    model: 'Baichuan4-Turbo',
+    endpoint: 'https://api.baichuan-ai.com/v1/chat/completions',
+    registerUrl: 'https://platform.baichuan-ai.com/',
+    registerText: '去百川智能注册 →',
+    models: 'Baichuan4-Turbo / Baichuan4 / Baichuan3-Turbo',
+  },
+  '01ai': {
+    name: '零一万物',
+    model: 'yi-lightning',
+    endpoint: 'https://api.lingyiwanwu.com/v1/chat/completions',
+    registerUrl: 'https://platform.lingyiwanwu.com/',
+    registerText: '去零一万物注册 →',
+    models: 'yi-lightning / yi-large / yi-medium',
+  },
+  stepfun: {
+    name: '阶跃星辰',
+    model: 'step-1-8k',
+    endpoint: 'https://api.stepfun.com/v1/chat/completions',
+    registerUrl: 'https://platform.stepfun.com/',
+    registerText: '去阶跃星辰注册 →',
+    models: 'step-1-8k / step-1-32k / step-2-16k',
+  },
+  bytedance: {
+    name: '字节豆包',
+    model: 'doubao-lite-32k',
+    endpoint: 'https://ark.cn-beijing.volces.com/api/v3/chat/completions',
+    registerUrl: 'https://console.volcengine.com/ark/',
+    registerText: '去火山引擎注册 →',
+    models: 'doubao-lite-32k / doubao-pro-32k / doubao-pro-128k',
+  },
+  xai: {
+    name: 'xAI',
+    model: 'grok-2-1212',
+    endpoint: 'https://api.x.ai/v1/chat/completions',
+    registerUrl: 'https://x.ai/',
+    registerText: '去 xAI 注册 →',
+    models: 'grok-2-1212 / grok-2-vision-1212',
+  },
+  openai: {
+    name: 'OpenAI',
+    model: 'gpt-4o',
+    endpoint: 'https://api.openai.com/v1/chat/completions',
+    registerUrl: 'https://platform.openai.com/',
+    registerText: '去 OpenAI 注册 →',
+    models: 'gpt-4o / gpt-4o-mini / gpt-4-turbo / o1 / o3-mini',
+  },
+  custom: {
+    name: '自定义',
+    model: '',
+    endpoint: '',
+    registerUrl: '',
+    registerText: '',
+    models: '',
   },
 };
 
@@ -100,11 +184,15 @@ function getApiConfig() {
   return {
     provider: localStorage.getItem('mathvis_provider') || 'zhipu',
     apiKey: localStorage.getItem('mathvis_api_key') || '',
+    endpoint: localStorage.getItem('mathvis_endpoint') || '',
+    model: localStorage.getItem('mathvis_model') || '',
   };
 }
-function setApiConfig(provider, apiKey) {
+function setApiConfig(provider, apiKey, endpoint, model) {
   localStorage.setItem('mathvis_provider', provider);
   localStorage.setItem('mathvis_api_key', apiKey);
+  localStorage.setItem('mathvis_endpoint', endpoint || '');
+  localStorage.setItem('mathvis_model', model || '');
   updateApiStatus();
 }
 function updateApiStatus() {
@@ -119,9 +207,16 @@ updateApiStatus();
 // ============ Provider hint updater ============
 function updateProviderHint(providerId) {
   const p = PROVIDERS[providerId] || PROVIDERS.zhipu;
-  dom.formHint.innerHTML = `还没有 Key？<a href="${p.registerUrl}" target="_blank" rel="noopener">${p.registerText}</a>`;
+  dom.formHint.innerHTML = p.registerUrl
+    ? `还没有 Key？<a href="${p.registerUrl}" target="_blank" rel="noopener">${p.registerText}</a>`
+    : '请手动填写端点和模型名称';
+  dom.modelHint.textContent = p.models ? `常用模型：${p.models}` : '可自由输入任意模型名';
 }
+// Auto-fill endpoint & model when provider changes
 dom.apiProvider.addEventListener('change', () => {
+  const p = PROVIDERS[dom.apiProvider.value] || PROVIDERS.zhipu;
+  dom.apiEndpoint.value = p.endpoint || '';
+  dom.apiModel.value = p.model || '';
   updateProviderHint(dom.apiProvider.value);
 });
 
@@ -129,6 +224,10 @@ dom.apiProvider.addEventListener('change', () => {
 dom.btnApi.addEventListener('click', () => {
   const cfg = getApiConfig();
   dom.apiProvider.value = cfg.provider;
+  // If saved config has endpoint/model, use those; otherwise use provider defaults
+  const p = PROVIDERS[cfg.provider] || PROVIDERS.zhipu;
+  dom.apiEndpoint.value = cfg.endpoint || p.endpoint || '';
+  dom.apiModel.value = cfg.model || p.model || '';
   dom.apiKeyInput.value = cfg.apiKey;
   updateProviderHint(cfg.provider);
   dom.apiModalOverlay.classList.add('open');
@@ -140,11 +239,14 @@ dom.btnModalCancel.addEventListener('click', () => {
 dom.btnModalSave.addEventListener('click', () => {
   const provider = dom.apiProvider.value;
   const key = dom.apiKeyInput.value.trim();
+  const endpoint = dom.apiEndpoint.value.trim();
+  const model = dom.apiModel.value.trim();
   if (!key) { showToast('请输入 API Key', 'error'); return; }
-  setApiConfig(provider, key);
+  if (!endpoint) { showToast('请输入 API 端点', 'error'); return; }
+  if (!model) { showToast('请输入模型名称', 'error'); return; }
+  setApiConfig(provider, key, endpoint, model);
   dom.apiModalOverlay.classList.remove('open');
-  const p = PROVIDERS[provider];
-  showToast(`${p.name} API Key 已保存`, 'success');
+  showToast('API 配置已保存', 'success');
 });
 dom.apiModalOverlay.addEventListener('click', (e) => {
   if (e.target === dom.apiModalOverlay) dom.apiModalOverlay.classList.remove('open');
@@ -931,7 +1033,16 @@ const SYSTEM_PROMPT_2D = `你是一个小学数学图解专家。根据用户的
 - 相遇问题 → 画两地+相向而行的箭头，标注速度
 - 工程问题 → 画进度条或工作量方块
 - 单价问题 → 画价格标签和数量方块
+- 绳子对折/剪纸对折 → 用横向长条代表绳子/纸，对折一次就在长条中间画虚线折痕并标注"对折1次→2层"，再对折就在已有2层中间再画虚线标注"对折2次→4层"；每步都要画出完整绳子形态，标记折痕和层数；剪开时用红色剪刀符号标注剪开位置
 - 尽量不用方程式！用图形、线段、箭头、方块等直观表示数量关系
+
+【对折问题专属绘图要求】
+1. 画一根横向长条（宽约 W*0.7，高约 20-30px），代表绳子/纸
+2. 对折时在长条正中间画红色虚线（ctx.setLineDash），标注"第N次对折"
+3. 对折后长条变短一半，但厚度加倍（可用层叠的短线或加粗表示）
+4. 每步都要在绳子上方标注当前层数（如"2层""4层""8层"）
+5. 最后一步剪开时，在折痕处画剪刀符号✂，并标注被剪开的位置
+6. 用不同颜色的色块标记被剪断后形成的各段
 
 【示例应用题】剪纸对折、鸡兔同笼、年龄问题、植树问题、相遇问题、工程问题等
 
@@ -993,14 +1104,22 @@ async function callAI(userMessage) {
     dom.btnApi.click();
     return null;
   }
+  // Always use saved endpoint/model; fall back to provider defaults
+  const endpoint = cfg.endpoint || provider.endpoint;
+  const model = cfg.model || provider.model;
+  if (!endpoint || !model) {
+    showToast('请完善 API 配置（端点和模型不能为空）', 'error');
+    dom.btnApi.click();
+    return null;
+  }
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 60000);
   try {
-    const response = await fetch(provider.endpoint, {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cfg.apiKey}` },
       body: JSON.stringify({
-        model: provider.model,
+        model: model,
         messages: [
           { role: 'system', content: getSystemPrompt() },
           { role: 'user', content: buildPrompt(userMessage) },

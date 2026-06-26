@@ -446,49 +446,52 @@ body {
   z-index: 14;
   background: linear-gradient(135deg, #eef1ff 0%, #f0f3ff 100%);
   border-bottom: 1px solid var(--border);
-  padding: 10px 20px;
+  padding: 8px 16px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   pointer-events: none;
+  min-height: 38px;
 }
-.question-banner .qb-icon { font-size: 1.2rem; flex-shrink: 0; }
-.question-banner .qb-text { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); flex: 1; }
+.question-banner .qb-icon { font-size: 1rem; flex-shrink: 0; }
+.question-banner .qb-text { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .question-banner .qb-badge {
   font-size: 0.65rem; padding: 3px 10px; border-radius: 10px;
-  background: var(--accent-bg); color: var(--accent); white-space: nowrap;
+  background: var(--accent-bg); color: var(--accent); white-space: nowrap; flex-shrink: 0;
 }
 
 /* ============ 2D Step Controls ============ */
 .step-controls {
   position: absolute;
-  top: 52px;
+  top: 44px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   z-index: 15;
   background: rgba(255,255,255,0.95);
   border: 1px solid var(--border);
   border-radius: 24px;
-  padding: 8px 16px;
+  padding: 5px 14px;
   box-shadow: var(--shadow-sm);
+  max-width: 95vw;
 }
 
 .step-controls .step-btn {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: #fff;
   color: var(--text-secondary);
   cursor: pointer;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   transition: all var(--transition);
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .step-controls .step-btn:hover {
@@ -502,18 +505,23 @@ body {
 }
 
 .step-controls .step-info {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-primary);
-  min-width: 80px;
+  min-width: 45px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .step-controls .step-desc {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
   max-width: 300px;
   text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
 }
 
 /* ============ Input Bar ============ */
@@ -620,10 +628,10 @@ body {
 /* ============ Toast ============ */
 .toast {
   position: fixed;
-  top: 20px;
+  bottom: 32px;
   left: 50%;
-  transform: translateX(-50%) translateY(-120px);
-  padding: 12px 24px;
+  transform: translateX(-50%) translateY(120px);
+  padding: 10px 20px;
   border-radius: var(--radius-sm);
   background: var(--bg-panel);
   border: 1px solid var(--border);
@@ -634,7 +642,9 @@ body {
   box-shadow: var(--shadow-lg);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  max-width: 90vw;
+  pointer-events: auto;
 }
 
 .toast.show { transform: translateX(-50%) translateY(0); }
@@ -805,8 +815,8 @@ body {
 
   .modal { padding: 24px; width: 95vw; }
 
-  .step-controls { padding: 6px 12px; gap: 8px; top: 46px; }
-  .step-controls .step-desc { max-width: 180px; font-size: 0.7rem; }
+  .step-controls { padding: 4px 10px; gap: 6px; top: 40px; }
+  .step-controls .step-desc { max-width: 140px; font-size: 0.7rem; }
   .question-banner { padding: 5px 10px; }
 }
 
@@ -847,15 +857,15 @@ body {
 
     <nav class="sidebar-nav">
       <div class="nav-section-label">可视化模块</div>
-      <div class="nav-item active" data-mode="geometry">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-        几何设计
-        <span class="badge">3D</span>
-      </div>
-      <div class="nav-item" data-mode="word-problem">
+      <div class="nav-item active" data-mode="word-problem">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
         应用题解析
         <span class="badge">2D</span>
+      </div>
+      <div class="nav-item" data-mode="geometry">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        几何设计
+        <span class="badge">3D</span>
       </div>
       <div class="nav-item" data-mode="plane-geometry">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><circle cx="12" cy="12" r="3"/></svg>
@@ -880,9 +890,9 @@ body {
   <div id="main-area">
     <div id="viewport">
       <!-- 3D Canvas (geometry mode) -->
-      <canvas id="three-canvas"></canvas>
+      <canvas id="three-canvas" class="hidden-canvas"></canvas>
       <!-- 2D Canvas (word-problem mode) -->
-      <canvas id="two-d-canvas" class="hidden-canvas"></canvas>
+      <canvas id="two-d-canvas"></canvas>
 
       <div class="viewport-overlay" id="viewport-overlay">
         <div class="overlay-bg"></div>
@@ -893,12 +903,12 @@ body {
       </div>
 
       <div class="empty-prompt" id="empty-prompt">
-        <div class="big-icon">🔮</div>
-        <p id="empty-prompt-text">在底部输入框中描述数学问题<br>AI 将自动生成可视化场景</p>
+        <div class="big-icon">📝</div>
+        <p id="empty-prompt-text">输入一道应用题<br>AI 会用图形逐步解释解题过程</p>
       </div>
 
       <!-- Top bar controls -->
-      <div class="viewport-topbar" id="topbar-geometry">
+      <div class="viewport-topbar hidden-canvas" id="topbar-geometry">
         <button class="vp-btn" id="btn-reset-view" title="重置视角">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
         </button>
@@ -911,14 +921,14 @@ body {
       </div>
 
       <!-- Question banner (2D modes only) -->
-      <div class="question-banner hidden-canvas" id="question-banner">
+      <div class="question-banner" id="question-banner">
         <span class="qb-icon">📝</span>
         <span class="qb-text" id="qb-text"></span>
         <span class="qb-badge" id="qb-badge"></span>
       </div>
 
       <!-- 2D Step Controls -->
-      <div class="step-controls hidden-canvas" id="step-controls">
+      <div class="step-controls" id="step-controls">
         <button class="step-btn" id="btn-step-prev" title="上一步">◀</button>
         <span class="step-info" id="step-info">1 / 1</span>
         <button class="step-btn" id="btn-step-next" title="下一步">▶</button>
@@ -926,7 +936,7 @@ body {
       </div>
 
       <!-- Geometry example chips -->
-      <div class="example-chips" id="chips-geometry">
+      <div class="example-chips hidden-canvas" id="chips-geometry">
         <div class="chip-label">📐 快速示例</div>
         <button class="chip" data-example="cube">正方体体积</button>
         <button class="chip" data-example="cylinder">圆柱体计算</button>
@@ -937,13 +947,14 @@ body {
       </div>
 
       <!-- Word problem example chips -->
-      <div class="example-chips hidden-canvas" id="chips-word-problem">
+      <div class="example-chips" id="chips-word-problem">
         <div class="chip-label">📝 应用题示例</div>
         <button class="chip" data-example="paper-dolls">剪纸对折问题</button>
         <button class="chip" data-example="chicken-rabbit">鸡兔同笼</button>
         <button class="chip" data-example="age-problem">年龄问题</button>
         <button class="chip" data-example="tree-planting">植树问题</button>
         <button class="chip" data-example="meeting-problem">相遇问题</button>
+        <button class="chip" data-example="rope-fold">绳子对折剪开</button>
         <button class="chip" data-example="calendar-weekday">日历星期推算</button>
         <button class="chip" data-example="work-problem">工程问题</button>
       </div>
@@ -982,16 +993,35 @@ body {
   <div class="modal">
     <h3>⚙️ AI API 配置</h3>
     <p class="desc">
-      支持多个 AI 服务商，选择你已注册的平台即可<br>
-      智谱 / DeepSeek 注册即送免费额度
+      选择服务商会自动填入默认配置，端点和模型均可随意修改<br>
+      <small style="color:#a0aec0">支持任意兼容 OpenAI 格式的 API</small>
     </p>
     <div class="form-group">
       <label>AI 服务商</label>
       <select id="api-provider">
-        <option value="zhipu">智谱AI (GLM-4-Flash) · 推荐</option>
-        <option value="deepseek">DeepSeek (DeepSeek-V3)</option>
-        <option value="qwen">千问 (Qwen-Turbo)</option>
+        <option value="zhipu">智谱AI (GLM)</option>
+        <option value="deepseek">DeepSeek</option>
+        <option value="qwen">阿里千问 (Qwen)</option>
+        <option value="hunyuan">腾讯混元 (Hunyuan)</option>
+        <option value="moonshot">月之暗面 (Kimi)</option>
+        <option value="minimax">MiniMax</option>
+        <option value="baichuan">百川智能</option>
+        <option value="01ai">零一万物 (Yi)</option>
+        <option value="stepfun">阶跃星辰</option>
+        <option value="bytedance">字节豆包 (Doubao)</option>
+        <option value="xai">xAI (Grok)</option>
+        <option value="openai">OpenAI</option>
+        <option value="custom">其他 (自定义)...</option>
       </select>
+    </div>
+    <div class="form-group">
+      <label>API 端点 (Endpoint)</label>
+      <input type="text" id="api-endpoint" placeholder="https://api.example.com/v1/chat/completions">
+    </div>
+    <div class="form-group">
+      <label>模型名称 (Model)</label>
+      <input type="text" id="api-model" placeholder="如 glm-4-flash / deepseek-chat / gpt-4o ...">
+      <div class="form-hint" id="model-hint"></div>
     </div>
     <div class="form-group">
       <label>API Key</label>
@@ -1068,6 +1098,9 @@ const dom = {
   btnModalCancel: document.getElementById('btn-modal-cancel'),
   apiDot: document.getElementById('api-dot'),
   apiStatusText: document.getElementById('api-status-text'),
+  apiEndpoint: document.getElementById('api-endpoint'),
+  apiModel: document.getElementById('api-model'),
+  modelHint: document.getElementById('model-hint'),
   navItems: document.querySelectorAll('.nav-item'),
   allChips: document.querySelectorAll('.chip'),
   toast: document.getElementById('toast'),
@@ -1076,7 +1109,7 @@ const dom = {
 };
 
 // ============ State ============
-let currentMode = 'geometry';
+let currentMode = 'word-problem';
 let isGenerating = false;
 let current2DSteps = [];
 let currentStep = 0;
@@ -1089,36 +1122,33 @@ function showToast(msg, type = 'info') {
   dom.toastMsg.textContent = msg;
   const icons = { error: '✕', success: '✓', info: '•' };
   dom.toastIcon.textContent = icons[type] || '';
-  requestAnimationFrame(() => dom.toast.classList.add('show'));
+  // Force reflow then add show class
+  void dom.toast.offsetWidth;
+  dom.toast.classList.add('show');
   toastTimer = setTimeout(() => dom.toast.classList.remove('show'), 3000);
 }
+// 点击 toast 可手动关闭
+dom.toast.addEventListener('click', () => {
+  clearTimeout(toastTimer);
+  dom.toast.classList.remove('show');
+});
 
 // ============ Provider Config ============
+// ============ Provider Config ============
 const PROVIDERS = {
-  zhipu: {
-    name: '智谱AI',
-    model: 'glm-4-flash',
-    endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-    registerUrl: 'https://open.bigmodel.cn/',
-    registerText: '去智谱AI注册 →',
-    desc: 'GLM-4-Flash · 注册送 500万 tokens',
-  },
-  deepseek: {
-    name: 'DeepSeek',
-    model: 'deepseek-chat',
-    endpoint: 'https://api.deepseek.com/v1/chat/completions',
-    registerUrl: 'https://platform.deepseek.com/',
-    registerText: '去 DeepSeek 注册 →',
-    desc: 'DeepSeek-V3 · 注册送 500万 tokens',
-  },
-  qwen: {
-    name: '千问',
-    model: 'qwen-turbo',
-    endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-    registerUrl: 'https://dashscope.aliyun.com/',
-    registerText: '去阿里云百炼注册 →',
-    desc: 'Qwen-Turbo · 注册送 100万 tokens',
-  },
+  zhipu:{name:'智谱AI',model:'glm-4-flash',endpoint:'https://open.bigmodel.cn/api/paas/v4/chat/completions',registerUrl:'https://open.bigmodel.cn/',registerText:'去智谱AI注册 →',models:'glm-4-flash / glm-4 / glm-4v / glm-4-plus'},
+  deepseek:{name:'DeepSeek',model:'deepseek-chat',endpoint:'https://api.deepseek.com/v1/chat/completions',registerUrl:'https://platform.deepseek.com/',registerText:'去 DeepSeek 注册 →',models:'deepseek-chat / deepseek-reasoner'},
+  qwen:{name:'阿里千问',model:'qwen-turbo',endpoint:'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',registerUrl:'https://dashscope.aliyun.com/',registerText:'去阿里云百炼注册 →',models:'qwen-turbo / qwen-plus / qwen-max / qwen3.5-flash'},
+  hunyuan:{name:'腾讯混元',model:'hunyuan-lite',endpoint:'https://api.hunyuan.cloud.tencent.com/v1/chat/completions',registerUrl:'https://cloud.tencent.com/product/hunyuan',registerText:'去腾讯云混元注册 →',models:'hunyuan-lite / hunyuan-standard / hunyuan-pro'},
+  moonshot:{name:'月之暗面',model:'moonshot-v1-8k',endpoint:'https://api.moonshot.cn/v1/chat/completions',registerUrl:'https://platform.moonshot.cn/',registerText:'去 Moonshot 注册 →',models:'moonshot-v1-8k / moonshot-v1-32k / kimi-k2.7'},
+  minimax:{name:'MiniMax',model:'abab6.5s-chat',endpoint:'https://api.minimax.chat/v1/text/chatcompletion_v2',registerUrl:'https://platform.minimaxi.com/',registerText:'去 MiniMax 注册 →',models:'abab6.5s-chat / abab7-chat-preview'},
+  baichuan:{name:'百川智能',model:'Baichuan4-Turbo',endpoint:'https://api.baichuan-ai.com/v1/chat/completions',registerUrl:'https://platform.baichuan-ai.com/',registerText:'去百川智能注册 →',models:'Baichuan4-Turbo / Baichuan4'},
+  '01ai':{name:'零一万物',model:'yi-lightning',endpoint:'https://api.lingyiwanwu.com/v1/chat/completions',registerUrl:'https://platform.lingyiwanwu.com/',registerText:'去零一万物注册 →',models:'yi-lightning / yi-large'},
+  stepfun:{name:'阶跃星辰',model:'step-1-8k',endpoint:'https://api.stepfun.com/v1/chat/completions',registerUrl:'https://platform.stepfun.com/',registerText:'去阶跃星辰注册 →',models:'step-1-8k / step-2-16k'},
+  bytedance:{name:'字节豆包',model:'doubao-lite-32k',endpoint:'https://ark.cn-beijing.volces.com/api/v3/chat/completions',registerUrl:'https://console.volcengine.com/ark/',registerText:'去火山引擎注册 →',models:'doubao-lite-32k / doubao-pro-32k'},
+  xai:{name:'xAI',model:'grok-2-1212',endpoint:'https://api.x.ai/v1/chat/completions',registerUrl:'https://x.ai/',registerText:'去 xAI 注册 →',models:'grok-2-1212 / grok-2-vision-1212'},
+  openai:{name:'OpenAI',model:'gpt-4o',endpoint:'https://api.openai.com/v1/chat/completions',registerUrl:'https://platform.openai.com/',registerText:'去 OpenAI 注册 →',models:'gpt-4o / gpt-4o-mini / o1 / o3-mini'},
+  custom:{name:'自定义',model:'',endpoint:'',registerUrl:'',registerText:'',models:''},
 };
 
 // ============ API Config Management ============
@@ -1126,11 +1156,15 @@ function getApiConfig() {
   return {
     provider: localStorage.getItem('mathvis_provider') || 'zhipu',
     apiKey: localStorage.getItem('mathvis_api_key') || '',
+    endpoint: localStorage.getItem('mathvis_endpoint') || '',
+    model: localStorage.getItem('mathvis_model') || '',
   };
 }
-function setApiConfig(provider, apiKey) {
+function setApiConfig(provider, apiKey, endpoint, model) {
   localStorage.setItem('mathvis_provider', provider);
   localStorage.setItem('mathvis_api_key', apiKey);
+  localStorage.setItem('mathvis_endpoint', endpoint || '');
+  localStorage.setItem('mathvis_model', model || '');
   updateApiStatus();
 }
 function updateApiStatus() {
@@ -1145,16 +1179,27 @@ updateApiStatus();
 // ============ Provider hint updater ============
 function updateProviderHint(providerId) {
   const p = PROVIDERS[providerId] || PROVIDERS.zhipu;
-  dom.formHint.innerHTML = `还没有 Key？<a href="${p.registerUrl}" target="_blank" rel="noopener">${p.registerText}</a>`;
+  dom.formHint.innerHTML = p.registerUrl ? `还没有 Key？<a href="${p.registerUrl}" target="_blank" rel="noopener">${p.registerText}</a>` : '请手动填写端点和模型名称';
+  dom.modelHint.textContent = p.models ? `常用模型：${p.models}` : '可自由输入任意模型名';
 }
 dom.apiProvider.addEventListener('change', () => {
+  if (_modalOpening) return;
+  const p = PROVIDERS[dom.apiProvider.value] || PROVIDERS.zhipu;
+  dom.apiEndpoint.value = p.endpoint || '';
+  dom.apiModel.value = p.model || '';
   updateProviderHint(dom.apiProvider.value);
 });
 
 // ============ Modal ============
+let _modalOpening = false;
 dom.btnApi.addEventListener('click', () => {
+  _modalOpening = true;
   const cfg = getApiConfig();
   dom.apiProvider.value = cfg.provider;
+  const p = PROVIDERS[cfg.provider] || PROVIDERS.zhipu;
+  dom.apiEndpoint.value = cfg.endpoint || p.endpoint || '';
+  dom.apiModel.value = cfg.model || p.model || '';
+  _modalOpening = false;
   dom.apiKeyInput.value = cfg.apiKey;
   updateProviderHint(cfg.provider);
   dom.apiModalOverlay.classList.add('open');
@@ -1166,11 +1211,14 @@ dom.btnModalCancel.addEventListener('click', () => {
 dom.btnModalSave.addEventListener('click', () => {
   const provider = dom.apiProvider.value;
   const key = dom.apiKeyInput.value.trim();
+  const endpoint = dom.apiEndpoint.value.trim();
+  const model = dom.apiModel.value.trim();
   if (!key) { showToast('请输入 API Key', 'error'); return; }
-  setApiConfig(provider, key);
+  if (!endpoint) { showToast('请输入 API 端点', 'error'); return; }
+  if (!model) { showToast('请输入模型名称', 'error'); return; }
+  setApiConfig(provider, key, endpoint, model);
   dom.apiModalOverlay.classList.remove('open');
-  const p = PROVIDERS[provider];
-  showToast(`${p.name} API Key 已保存`, 'success');
+  showToast('API 配置已保存', 'success');
 });
 dom.apiModalOverlay.addEventListener('click', (e) => {
   if (e.target === dom.apiModalOverlay) dom.apiModalOverlay.classList.remove('open');
@@ -1411,6 +1459,7 @@ function updateStepUI() {
   dom.stepInfo.textContent = `${currentStep + 1} / ${total}`;
   const step = current2DSteps[currentStep];
   dom.stepDesc.textContent = step?.desc || '';
+  dom.stepDesc.title = step?.desc || '';
   dom.btnStepPrev.disabled = currentStep <= 0;
   dom.btnStepNext.disabled = currentStep >= total - 1;
 }
@@ -1506,6 +1555,10 @@ window._drawCenteredText = drawCenteredText;
 window._drawArrow = drawArrow;
 
 // ============ Word Problem Examples ============
+const WORD_PROBLEM_QUESTIONS = {
+  'calendar-weekday': '2024年5月1日是星期三，6月10日是星期几？',
+  'rope-fold': '把一根绳子对折，对折，再对折，然后从对折后的中间处剪开，这根绳子被剪成了多少段？',
+};
 const WORD_PROBLEM_EXAMPLES = {
   'paper-dolls': [
     {
@@ -1861,34 +1914,32 @@ const WORD_PROBLEM_EXAMPLES = {
     {
       desc: '第①步：画出5月日历，找到5月1日=星期三',
       draw(ctx, W, H) {
-        const cx = W / 2;
-        drawCenteredText(ctx, '📅 2024年5月', cx, 35, 'bold 22px system-ui', '#1a1d26');
+        const cx = W / 2, offY = 85;
+        drawCenteredText(ctx, '📅 2024年5月', cx, 18 + offY, 'bold 22px system-ui', '#1a1d26');
         // Calendar table
         const days = ['日','一','二','三','四','五','六'];
-        const colW = 58, rowH = 36, startX = cx - colW * 3.5, startY = 70;
+        const colW = 52, rowH = 32, startX = cx - colW * 3.5, startY = 50 + offY;
         // Header row
         days.forEach((d, i) => {
           ctx.fillStyle = i === 0 ? '#e03131' : '#5a6070';
           ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
           ctx.fillText(d, startX + i * colW + colW / 2, startY + 12);
         });
-        // May 1 = Wednesday (周3, index 3), so offset = 3
         // Fill dates
         let day = 1;
-        // Find May 1 position: 2024 May 1 is Wednesday (index 3)
-        const mayFirst = 3; // Wednesday
+        const mayFirst = 3;
         for (let row = 0; row < 6 && day <= 31; row++) {
           for (let col = 0; col < 7 && day <= 31; col++) {
-            const x = startX + col * colW, y = startY + 24 + row * rowH;
-            if (row === 0 && col < mayFirst) continue; // empty cells before May 1
+            const x = startX + col * colW, y = startY + 22 + row * rowH;
+            if (row === 0 && col < mayFirst) continue;
             const isFirst = day === 1;
             ctx.fillStyle = isFirst ? '#4c6ef5' : '#fff';
             ctx.strokeStyle = isFirst ? '#4c6ef5' : '#e0e3e8';
             ctx.lineWidth = isFirst ? 2 : 1;
-            ctx.fillRect(x + 2, y - 18, colW - 4, rowH - 4);
-            ctx.strokeRect(x + 2, y - 18, colW - 4, rowH - 4);
+            ctx.fillRect(x + 2, y - 16, colW - 4, rowH - 4);
+            ctx.strokeRect(x + 2, y - 16, colW - 4, rowH - 4);
             ctx.fillStyle = isFirst ? '#fff' : '#1a1d26';
-            ctx.font = (isFirst ? 'bold ' : '') + '14px system-ui';
+            ctx.font = (isFirst ? 'bold ' : '') + '13px system-ui';
             ctx.textAlign = 'center';
             ctx.fillText(day.toString(), x + colW / 2, y);
             day++;
@@ -1901,62 +1952,169 @@ const WORD_PROBLEM_EXAMPLES = {
     {
       desc: '第②步：计算间隔天数 = 5月剩余 + 6月天数 = 30 + 10 = 40天',
       draw(ctx, W, H) {
-        const cx = W / 2;
-        drawCenteredText(ctx, '📏 计算经过的天数', cx, 35, 'bold 22px system-ui', '#1a1d26');
-        // May: 31 days, minus 1 (May 1 not counted in interval)
+        const cx = W / 2, offY = 85;
+        drawCenteredText(ctx, '📏 计算经过的天数', cx, 18 + offY, 'bold 22px system-ui', '#1a1d26');
+        const baseY = 65 + offY;
+        // May box
         ctx.fillStyle = '#e8ecf4'; ctx.strokeStyle = '#4c6ef5';
-        drawRoundRect(ctx, 50, 80, 130, 90, 6, '#e8ecf4', '#4c6ef5');
-        drawCenteredText(ctx, '5月', 115, 100, 'bold 16px system-ui', '#4c6ef5');
-        drawCenteredText(ctx, '31 - 1 = 30 天', 115, 140, 'bold 18px system-ui', '#1a1d26');
-        drawCenteredText(ctx, '(1日当天不算)', 115, 160, '12px system-ui', '#9ca3af');
-        // June: 10 days
+        drawRoundRect(ctx, 50, baseY, 120, 80, 6, '#e8ecf4', '#4c6ef5');
+        drawCenteredText(ctx, '5月', 110, baseY + 18, 'bold 16px system-ui', '#4c6ef5');
+        drawCenteredText(ctx, '31 - 1 = 30 天', 110, baseY + 48, 'bold 18px system-ui', '#1a1d26');
+        drawCenteredText(ctx, '(1日当天不算)', 110, baseY + 68, '12px system-ui', '#9ca3af');
+        // June box
         ctx.fillStyle = '#e6f0ff'; ctx.strokeStyle = '#e03131';
-        drawRoundRect(ctx, W - 180, 80, 130, 90, 6, '#e6f0ff', '#e03131');
-        drawCenteredText(ctx, '6月', W - 115, 100, 'bold 16px system-ui', '#e03131');
-        drawCenteredText(ctx, '10 天', W - 115, 140, 'bold 18px system-ui', '#1a1d26');
-        drawCenteredText(ctx, '(1日~10日)', W - 115, 160, '12px system-ui', '#9ca3af');
-        // Plus sign and arrow
-        drawCenteredText(ctx, '+', cx, 125, 'bold 24px system-ui', '#5a6070');
-        drawArrow(ctx, 195, 250, W - 195, 250, '#5a6070');
-        drawCenteredText(ctx, '= 40 天', cx, 230, 'bold 22px system-ui', '#2b9e44');
-        drawCenteredText(ctx, '从5月2日到6月10日，共40天', cx, 275, '15px system-ui', '#5a6070');
+        drawRoundRect(ctx, W - 170, baseY, 120, 80, 6, '#e6f0ff', '#e03131');
+        drawCenteredText(ctx, '6月', W - 110, baseY + 18, 'bold 16px system-ui', '#e03131');
+        drawCenteredText(ctx, '10 天', W - 110, baseY + 48, 'bold 18px system-ui', '#1a1d26');
+        drawCenteredText(ctx, '(1日~10日)', W - 110, baseY + 68, '12px system-ui', '#9ca3af');
+        // Plus sign
+        drawCenteredText(ctx, '+', cx, baseY + 40, 'bold 24px system-ui', '#5a6070');
+        // Arrow + result
+        drawArrow(ctx, 180, baseY + 130, W - 180, baseY + 130, '#5a6070');
+        drawCenteredText(ctx, '= 40 天', cx, baseY + 100, 'bold 22px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '从5月2日到6月10日，共40天', cx, baseY + 170, '15px system-ui', '#5a6070');
       }
     },
     {
       desc: '第③步：40 ÷ 7 = 5 周余 5 天 → 星期三 + 5 天 = 星期一',
       draw(ctx, W, H) {
-        const cx = W / 2;
-        drawCenteredText(ctx, '🔄 40 天等于几周几天？', cx, 35, 'bold 22px system-ui', '#1a1d26');
+        const cx = W / 2, offY = 85;
+        drawCenteredText(ctx, '🔄 40 天等于几周几天？', cx, 18 + offY, 'bold 22px system-ui', '#1a1d26');
         // 40 divided into weeks
-        const startX = cx - 280, y = 80, boxW = 75;
+        const startX = cx - 280, baseY = 60 + offY, boxW = 75;
         for (let w = 0; w < 5; w++) {
           for (let d = 0; d < 7; d++) {
             const x = startX + w * boxW + d * 6;
             ctx.fillStyle = '#d2dce8';
-            drawRoundRect(ctx, x, y, boxW - 4, 28, 3, '#d2dce8', '#b0b8c8');
+            drawRoundRect(ctx, x, baseY, boxW - 4, 26, 3, '#d2dce8', '#b0b8c8');
           }
-          drawCenteredText(ctx, '第' + (w + 1) + '周', startX + w * boxW + 37, y + 42, 'bold 12px system-ui', '#5a6070');
+          drawCenteredText(ctx, '第' + (w + 1) + '周', startX + w * boxW + 37, baseY + 40, 'bold 11px system-ui', '#5a6070');
         }
         // Remaining 5 days
         for (let d = 0; d < 5; d++) {
           const x = startX + 5 * boxW + d * 6;
           ctx.fillStyle = '#fce4e4'; ctx.strokeStyle = '#e03131';
-          drawRoundRect(ctx, x, y, boxW - 4, 28, 3, '#fce4e4', '#e03131');
+          drawRoundRect(ctx, x, baseY, boxW - 4, 26, 3, '#fce4e4', '#e03131');
         }
-        drawCenteredText(ctx, '余5天', startX + 5 * boxW + 37, y + 42, 'bold 12px system-ui', '#e03131');
+        drawCenteredText(ctx, '余5天', startX + 5 * boxW + 37, baseY + 40, 'bold 11px system-ui', '#e03131');
         // Weekday count
         const weekNames = ['三', '四', '五', '六', '日', '一', '二'];
         const weekColors = ['#1a1d26','#5a6070','#5a6070','#5a6070','#e03131','#2b9e44','#5a6070'];
-        drawCenteredText(ctx, '从星期三开始数 5 天：', cx, 160, 'bold 17px system-ui', '#1a1d26');
+        drawCenteredText(ctx, '从星期三开始数 5 天：', cx, baseY + 85, 'bold 17px system-ui', '#1a1d26');
         for (let i = 0; i <= 5; i++) {
-          const x = cx - 170 + i * 60;
+          const x = cx - 160 + i * 58;
           drawCenteredText(ctx, i === 0 ? '三' + ' (0)' : weekNames[i] + (i === 5 ? ' ✓' : ''),
-            x, 200, (i === 5 ? 'bold ' : '') + '18px system-ui', weekColors[i]);
+            x, baseY + 120, (i === 5 ? 'bold ' : '') + '17px system-ui', weekColors[i]);
         }
         // Final answer
-        drawRoundRect(ctx, cx - 100, 240, 200, 48, 24, '#e6f7ee', '#2b9e44');
-        drawCenteredText(ctx, '✅ 6月10日是星期一！', cx, 264, 'bold 20px system-ui', '#2b9e44');
-        drawCenteredText(ctx, '40 ÷ 7 = 5⋯⋯5 → 周三 + 5天 → 周一', cx, 310, '14px system-ui', '#9ca3af');
+        drawRoundRect(ctx, cx - 100, baseY + 150, 200, 48, 24, '#e6f7ee', '#2b9e44');
+        drawCenteredText(ctx, '✅ 6月10日是星期一！', cx, baseY + 174, 'bold 20px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '40 ÷ 7 = 5⋯⋯5 → 周三 + 5天 → 周一', cx, baseY + 210, '14px system-ui', '#9ca3af');
+      }
+    },
+  ],
+
+  'rope-fold': [
+    {
+      desc: '第①步：一根完整的绳子 —— 对折 0 次 = 1 层',
+      draw(ctx, W, H) {
+        const cx = W / 2, offY = 85, ropeW = W * 0.7, ropeH = 24, ropeY = 180 + offY;
+        drawCenteredText(ctx, '🪢 一根完整的绳子', cx, 20 + offY, 'bold 22px system-ui', '#1a1d26');
+        // Draw rope
+        ctx.fillStyle = '#f0d78c';
+        ctx.strokeStyle = '#c4a44a';
+        ctx.lineWidth = 2;
+        drawRoundRect(ctx, cx - ropeW / 2, ropeY, ropeW, ropeH, ropeH / 2, '#f0d78c', '#c4a44a');
+        // Rope texture lines
+        ctx.strokeStyle = '#d4b85a';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 6; i++) {
+          const sx = cx - ropeW / 2 + 15 + i * ((ropeW - 30) / 5);
+          ctx.beginPath(); ctx.moveTo(sx, ropeY + 4); ctx.lineTo(sx, ropeY + ropeH - 4); ctx.stroke();
+        }
+        drawCenteredText(ctx, '对折 0 次 → 1 层', cx, ropeY + ropeH + 30, 'bold 16px system-ui', '#5a6070');
+        drawCenteredText(ctx, '端点 A                                端点 B', cx, ropeY + ropeH + 55, '13px system-ui', '#9ca3af');
+      }
+    },
+    {
+      desc: '第②步：第 1 次对折 → 绳子折成 U 形 = 2 层',
+      draw(ctx, W, H) {
+        const cx = W / 2, offY = 85, ropeW2 = W * 0.35, ropeH = 24, topY = 140 + offY;
+        drawCenteredText(ctx, '第 1 次对折 → 2 层', cx, 20 + offY, 'bold 22px system-ui', '#1a1d26');
+        // Upper half of folded rope
+        ctx.fillStyle = '#f0d78c';
+        ctx.strokeStyle = '#c4a44a';
+        ctx.lineWidth = 2;
+        drawRoundRect(ctx, cx - ropeW2 / 2, topY, ropeW2, ropeH, ropeH / 2, '#f0d78c', '#c4a44a');
+        // Lower half
+        drawRoundRect(ctx, cx - ropeW2 / 2, topY + 50, ropeW2, ropeH, ropeH / 2, '#e8c870', '#c4a44a');
+        // Fold mark (dashed line) at the right end
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = '#e03131';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(cx + ropeW2 / 2, topY); ctx.lineTo(cx + ropeW2 / 2, topY + 50 + ropeH); ctx.stroke();
+        ctx.setLineDash([]);
+        // Connector at left
+        ctx.strokeStyle = '#c4a44a';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(cx - ropeW2 / 2, topY + 25, 25, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+        drawCenteredText(ctx, '折痕 →', cx + ropeW2 / 2 + 30, topY + 25, 'bold 14px system-ui', '#e03131');
+        drawCenteredText(ctx, '2 层（上下两层）', cx, topY + 50 + ropeH + 30, 'bold 16px system-ui', '#5a6070');
+      }
+    },
+    {
+      desc: '第③步：第 2 次对折 → 4 层',
+      draw(ctx, W, H) {
+        const cx = W / 2, offY = 85, ropeW3 = W * 0.2, ropeH = 18, topY = 120 + offY;
+        drawCenteredText(ctx, '第 2 次对折 → 4 层', cx, 20 + offY, 'bold 22px system-ui', '#1a1d26');
+        const colors = ['#f0d78c', '#e8c870', '#e0c058', '#d8b040'];
+        for (let i = 0; i < 4; i++) {
+          ctx.fillStyle = colors[i];
+          ctx.strokeStyle = '#b89838';
+          ctx.lineWidth = 1.5;
+          drawRoundRect(ctx, cx - ropeW3 / 2, topY + i * 28, ropeW3, ropeH, ropeH / 2, colors[i], '#b89838');
+        }
+        // Fold mark
+        ctx.setLineDash([4, 3]);
+        ctx.strokeStyle = '#e03131';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(cx + ropeW3 / 2, topY); ctx.lineTo(cx + ropeW3 / 2, topY + 3 * 28 + ropeH); ctx.stroke();
+        ctx.setLineDash([]);
+        // Left connector
+        ctx.strokeStyle = '#b89838';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(cx - ropeW3 / 2, topY + 42, 20, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+        drawCenteredText(ctx, '折痕 →', cx + ropeW3 / 2 + 25, topY + 42, 'bold 13px system-ui', '#e03131');
+        drawCenteredText(ctx, '4 层（每层 2 个绳段）', cx, topY + 4 * 28 + 25, 'bold 16px system-ui', '#5a6070');
+      }
+    },
+    {
+      desc: '第④步：第 3 次对折 → 8 层，从中剪开',
+      draw(ctx, W, H) {
+        const cx = W / 2, offY = 85, ropeW4 = W * 0.15, ropeH = 13, topY = 100 + offY;
+        drawCenteredText(ctx, '第 3 次对折 → 8 层 ✂ 剪开', cx, 20 + offY, 'bold 22px system-ui', '#1a1d26');
+        const colors = ['#f0d78c','#ecd078','#e8c870','#e4c068','#e0c058','#dcb850','#d8b040','#d4a838'];
+        for (let i = 0; i < 8; i++) {
+          ctx.fillStyle = colors[i];
+          ctx.strokeStyle = '#a08830';
+          ctx.lineWidth = 1;
+          drawRoundRect(ctx, cx - ropeW4 / 2, topY + i * 18, ropeW4, ropeH, ropeH / 2, colors[i], '#a08830');
+        }
+        // Cut mark (scissors at the right fold)
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = '#e03131';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(cx + ropeW4 / 2, topY - 5); ctx.lineTo(cx + ropeW4 / 2, topY + 7 * 18 + ropeH + 5); ctx.stroke();
+        ctx.setLineDash([]);
+        // ✂ symbol
+        ctx.font = '28px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('✂', cx + ropeW4 / 2, topY - 15);
+        drawCenteredText(ctx, '从这里剪开', cx + ropeW4 / 2 + 30, topY + 56, 'bold 14px system-ui', '#e03131');
+        // Result
+        drawRoundRect(ctx, cx - 120, topY + 8 * 18 + 10, 240, 46, 23, '#e6f7ee', '#2b9e44');
+        drawCenteredText(ctx, '✅ 剪成了 9 段！', cx, topY + 8 * 18 + 33, 'bold 20px system-ui', '#2b9e44');
+        drawCenteredText(ctx, '8 层被一刀剪断 → 断开成 8+1=9 段', cx, topY + 8 * 18 + 58, '14px system-ui', '#9ca3af');
       }
     },
   ],
@@ -2062,7 +2220,16 @@ const SYSTEM_PROMPT_2D = `你是一个小学数学图解专家。根据用户的
 - 相遇问题 → 画两地+相向而行的箭头，标注速度
 - 工程问题 → 画进度条或工作量方块
 - 单价问题 → 画价格标签和数量方块
+- 绳子对折/剪纸对折 → 用横向长条代表绳子/纸，对折一次就在长条中间画虚线折痕并标注"对折1次→2层"，再对折就在已有2层中间再画虚线标注"对折2次→4层"；每步都要画出完整绳子形态，标记折痕和层数；剪开时用红色剪刀符号标注剪开位置
 - 尽量不用方程式！用图形、线段、箭头、方块等直观表示数量关系
+
+【对折问题专属绘图要求】
+1. 画一根横向长条（宽约 W*0.7，高约 20-30px），代表绳子/纸
+2. 对折时在长条正中间画红色虚线（ctx.setLineDash），标注"第N次对折"
+3. 对折后长条变短一半，但厚度加倍（可用层叠的短线或加粗表示）
+4. 每步都要在绳子上方标注当前层数（如"2层""4层""8层"）
+5. 最后一步剪开时，在折痕处画剪刀符号✂，并标注被剪开的位置
+6. 用不同颜色的色块标记被剪断后形成的各段
 
 【示例应用题】剪纸对折、鸡兔同笼、年龄问题、植树问题、相遇问题、工程问题等
 
@@ -2125,14 +2292,21 @@ async function callAI(userMessage) {
     dom.btnApi.click();
     return null;
   }
+  const endpoint = cfg.endpoint || provider.endpoint;
+  const model = cfg.model || provider.model;
+  if (!endpoint || !model) {
+    showToast('请完善 API 配置（端点和模型不能为空）', 'error');
+    dom.btnApi.click();
+    return null;
+  }
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 60000);
   try {
-    const response = await fetch(provider.endpoint, {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cfg.apiKey}` },
       body: JSON.stringify({
-        model: provider.model,
+        model: model,
         messages: [
           { role: 'system', content: getSystemPrompt() },
           { role: 'user', content: buildPrompt(userMessage) },
@@ -2616,7 +2790,8 @@ dom.allChips.forEach(chip => {
       if (!example) return;
       clear2DScene();
       setup2DCanvas();
-      show2DSteps(example, example[0]?.desc || chip.textContent);
+      const question = WORD_PROBLEM_QUESTIONS[exampleName] || example[0]?.desc || chip.textContent;
+      show2DSteps(example, question);
       dom.emptyPrompt.classList.add('hidden');
       showToast(`已加载：${chip.textContent}`, 'info');
     }
@@ -2637,6 +2812,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ============ Init ============
+switchMode(currentMode);
 console.log('🔮 数学可视化已就绪');
 console.log('  3D几何: R=重置 T=俯视 F=前视 C=清空');
 console.log('  2D模式: ←→ 翻页 | 应用题 / 平面几何');

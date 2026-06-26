@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小学数学例题解析 - 分步图形化</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4f8;--card:#fff;--text:#1a202c;--text2:#4a5568;--text3:#718096;
+  --primary:#5a67d8;--primary2:#434190;--accent:#ed8936;--accent2:#c05621;
+  --green:#38a169;--red:#e53e3e;--blue:#3182ce;--border:#e2e8f0;
+  --shadow:0 2px 8px rgba(0,0,0,.06);--shadow-lg:0 4px 20px rgba(0,0,0,.1);
+  --radius:12px;--radius-sm:8px;--transition:.2s ease;
+}
+body{font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+.app{display:flex;min-height:100vh}
+
+/* Sidebar */
+.sidebar{width:260px;background:#fff;border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:10}
+.sidebar-header{padding:0 20px 16px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.sidebar-header h1{font-size:18px;color:var(--primary);display:flex;align-items:center;gap:8px}
+.sidebar-header h1 span{font-size:12px;color:var(--text3);font-weight:400}
+.type-list{list-style:none}
+.type-item{padding:12px 20px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text2);transition:var(--transition);border-left:3px solid transparent}
+.type-item:hover{background:#f7fafc;color:var(--text)}
+.type-item.active{background:#ebf4ff;color:var(--primary);border-left-color:var(--primary);font-weight:600}
+.type-item .icon{font-size:18px;width:28px;text-align:center}
+
+/* Main */
+.main{margin-left:260px;flex:1;padding:28px 32px 48px;max-width:960px}
+
+/* Welcome */
+.welcome{text-align:center;padding:40px 20px}
+.welcome h2{font-size:24px;color:var(--primary);margin-bottom:8px}
+.welcome p{color:var(--text3);font-size:15px;margin-bottom:24px}
+
+/* Type Grid */
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:700px;margin:0 auto}
+.type-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 12px;cursor:pointer;transition:var(--transition);text-align:center}
+.type-card:hover{border-color:var(--primary);box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.type-card .tc-icon{font-size:28px;display:block;margin-bottom:6px}
+.type-card .tc-name{font-size:14px;font-weight:600;color:var(--text)}
+.type-card .tc-example{font-size:11px;color:var(--text3);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+@media(max-width:768px){
+  .type-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+}
+
+/* Content */
+.content{display:none}
+.content.visible{display:block}
+
+/* Type Header */
+.type-header{margin-bottom:24px}
+.type-header h2{font-size:22px;display:flex;align-items:center;gap:10px}
+.type-header h2 .t-icon{font-size:28px}
+.type-header .subtitle{color:var(--text3);font-size:14px;margin-top:4px}
+
+/* Card */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin-bottom:20px}
+.card-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:var(--primary)}
+.card-title .dot{width:8px;height:8px;border-radius:50%;background:var(--primary)}
+
+/* Question */
+.question-box{background:#fefcbf;border-left:4px solid var(--accent);padding:14px 18px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:15px;line-height:1.7;margin-bottom:20px;font-weight:500}
+
+/* Canvas area */
+.canvas-wrap{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;position:relative;background:#fafbfc}
+.canvas-wrap canvas{display:block;width:100%}
+
+/* Step controls */
+.step-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin:16px 0}
+.step-btn{padding:8px 20px;border:2px solid var(--primary);background:#fff;color:var(--primary);border-radius:20px;cursor:pointer;font-size:14px;font-weight:600;transition:var(--transition)}
+.step-btn:hover:not(:disabled){background:var(--primary);color:#fff}
+.step-btn:disabled{opacity:.4;cursor:not-allowed}
+.step-indicator{font-size:14px;color:var(--text3);min-width:80px;text-align:center}
+.step-title{text-align:center;font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px;min-height:22px}
+.step-text{background:#f7fafc;padding:14px 18px;border-radius:var(--radius-sm);font-size:14px;line-height:1.7;color:var(--text2);margin-top:12px}
+
+/* Variants */
+.variants-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.variant-tab{padding:8px 16px;border:2px solid var(--border);background:#fff;border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);transition:var(--transition)}
+.variant-tab:hover{border-color:var(--accent);color:var(--accent)}
+.variant-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.variant-tab .v-hint{font-weight:400;font-size:11px;opacity:.8;margin-left:4px}
+.variant-panel{display:none}
+.variant-panel.active{display:block}
+.variant-header{font-size:15px;font-weight:600;margin-bottom:12px;color:var(--text);display:flex;align-items:center;gap:8px}
+.variant-header .v-badge{background:var(--accent);color:#fff;font-size:11px;padding:2px 10px;border-radius:10px}
+
+/* Analysis */
+.analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.analysis-col{padding:18px;border-radius:var(--radius-sm)}
+.analysis-col.sim{background:#f0fff4;border:1px solid #c6f6d5}
+.analysis-col.diff{background:#fff5f5;border:1px solid #fed7d7}
+.analysis-col h4{display:flex;align-items:center;gap:6px;font-size:14px;margin-bottom:10px}
+.analysis-col.sim h4{color:var(--green)}
+.analysis-col.diff h4{color:var(--red)}
+.analysis-col li{font-size:13px;line-height:1.7;color:var(--text2);margin-left:16px;margin-bottom:4px}
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{width:100%;position:relative;height:auto;border-right:none;border-bottom:1px solid var(--border);padding:12px 0}
+  .sidebar-header{display:none}
+  .type-list{display:flex;overflow-x:auto;padding:0 8px;gap:4px}
+  .type-item{padding:8px 12px;font-size:12px;white-space:nowrap;border-left:none;border-bottom:2px solid transparent;flex-shrink:0}
+  .type-item.active{border-bottom-color:var(--primary)}
+  .main{margin-left:0;padding:16px}
+  .analysis-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>📐 例题解析 <span>小学版</span></h1>
+    </div>
+    <ul class="type-list" id="typeList"></ul>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Welcome state -->
+    <div class="welcome" id="welcome">
+      <h2>📐 小学数学例题解析</h2>
+      <p>12 类常考应用题，图形化分步解析 + 变形题对比</p>
+      <div class="type-grid" id="typeGrid"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<script>
+// ============================================================
+// DRAWING UTILITIES
+// ============================================================
+const U = {
+  arrow(c, x1,y1,x2,y2, color='#5a67d8', w=2) {
+    c.strokeStyle=color;c.lineWidth=w;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
+    const a=Math.atan2(y2-y1,x2-x1), L=10;
+    c.fillStyle=color;
+    c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-L*Math.cos(a-Math.PI/6),y2-L*Math.sin(a-Math.PI/6));c.lineTo(x2-L*Math.cos(a+Math.PI/6),y2-L*Math.sin(a+Math.PI/6));c.closePath();c.fill();
+  },
+  label(c,x,y,text,color='#1a202c',size=14){
+    c.fillStyle=color;c.font=`${size}px "PingFang SC","Microsoft YaHei",sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(text,x,y);
+  },
+  labelL(c,x,y,text,color='#1a202c',size=14){
+    c.fillStyle=color;c.font=`${size}px "PingFang SC","Microsoft YaHei",sans-serif`;c.textAlign='left';c.textBaseline='middle';c.fillText(text,x,y);
+  },
+  dot(c,x,y,r,color='#e53e3e'){
+    c.fillStyle=color;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();
+  },
+  rect(c,x,y,w,h,color,alpha=1){
+    c.globalAlpha=alpha;c.fillStyle=color;c.fillRect(x,y,w,h);c.globalAlpha=1;
+  },
+  line(c,x1,y1,x2,y2,color='#cbd5e0',w=1,dash=[]){
+    c.strokeStyle=color;c.lineWidth=w;c.setLineDash(dash);c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.setLineDash([]);
+  },
+  clear(c,w,h){
+    c.clearRect(0,0,w,h);
+    c.fillStyle='#fafbfc';c.fillRect(0,0,w,h);
+  }
+};
+
+// ============================================================
+// PROBLEM DATA — 12 TYPES
+// Each type: { id, name, icon, example:{question,steps[{title,text,draw}]}, variants:[{question,hint,steps}], analysis:{similarities:[], differences:[]} }
+// ============================================================
+const TYPES = [
+// ==================== 1. 相遇问题 ====================
+{
+  id:'meeting', name:'相遇问题', icon:'🚗',
+  example:{
+    question:'甲、乙两人分别从相距 200 千米的 A、B 两地同时出发，相向而行。甲每小时走 60 千米，乙每小时走 40 千米。两人几小时后相遇？',
+    steps:[
+      {title:'第①步：画线段图，标出已知条件',
+       text:'用一条线段表示 A、B 两地的距离 200 千米。甲从 A 出发向右走，速度 60 km/h；乙从 B 出发向左走，速度 40 km/h。两人同时出发，相向而行。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.line(c,60,h/2,w-60,h/2,'#a0aec0',3);
+         U.dot(c,60,h/2,7,'#3182ce'); U.label(c,60,h/2-22,'A', '#3182ce',15);
+         U.dot(c,w-60,h/2,7,'#e53e3e'); U.label(c,w-60,h/2-22,'B', '#e53e3e',15);
+         U.label(c,w/2,h/2-18,'200 km','#4a5568',13);
+         U.arrow(c,60,h/2+30,140,h/2+30,'#3182ce',2);
+         U.label(c,100,h/2+48,'甲 60 km/h →','#3182ce',12);
+         U.arrow(c,w-60,h/2+30,w-140,h/2+30,'#e53e3e',2);
+         U.label(c,w-100,h/2+48,'← 乙 40 km/h','#e53e3e',12);
+       }},
+      {title:'第②步：理解"速度和"概念',
+       text:'两人相向而行，每过 1 小时，他们一共走近 60 + 40 = 100 千米。这个 100 km/h 就是"速度和"。他们从相距 200 千米到相遇，需要共同走完 200 千米。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.line(c,60,h/2,w-60,h/2,'#a0aec0',3);
+         U.dot(c,60,h/2,7,'#3182ce');U.label(c,60,h/2-22,'A','#3182ce',15);
+         U.dot(c,w-60,h/2,7,'#e53e3e');U.label(c,w-60,h/2-22,'B','#e53e3e',15);
+         // Show velocity addition
+         U.rect(c,w/2-80,h/2-80,160,50,'#ebf4ff',1);
+         U.label(c,w/2,h/2-65,'60 + 40 = 100 km/h','#5a67d8',16);
+         U.label(c,w/2,h/2-42,'速度和','#4a5568',12);
+         U.label(c,w/2,h/2-18,'200 km','#4a5568',13);
+       }},
+      {title:'第③步：列式求解',
+       text:'相遇时间 = 总路程 ÷ 速度和 = 200 ÷ (60 + 40) = 200 ÷ 100 = 2（小时）。验证：甲走 60×2=120 km，乙走 40×2=80 km，120+80=200 km ✓',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.line(c,60,h/2,w-60,h/2,'#a0aec0',3);
+         // Meeting point at 60% from A
+         const mx=60+(w-120)*0.6;
+         U.dot(c,mx,h/2,10,'#38a169');U.label(c,mx,h/2-22,'相遇点','#38a169',13);
+         U.line(c,60,h/2,mx,h/2,'#3182ce',3);
+         U.label(c,(60+mx)/2,h/2+20,'甲 120 km','#3182ce',12);
+         U.line(c,mx,h/2,w-60,h/2,'#e53e3e',3);
+         U.label(c,(mx+w-60)/2,h/2+20,'乙 80 km','#e53e3e',12);
+         U.label(c,w/2,30,'时间 = 200 ÷ 100 = 2 h','#2d3748',16);
+       }}
+    ]
+  },
+  variants:[
+    {question:'甲、乙两人从相距 360 千米的两地同时出发，相向而行。甲每小时走 75 千米，乙每小时走 45 千米。几小时后相遇？',
+     hint:'数字变化',
+     steps:[
+       {title:'分析',text:'速度和 = 75+45 = 120 km/h，时间 = 360÷120 = 3 小时。结构完全相同，只是路程和速度数字变了。',
+        draw(c,w,h){U.clear(c,w,h);U.line(c,60,h/2,w-60,h/2,'#a0aec0',3);U.dot(c,60,h/2,7,'#3182ce');U.dot(c,w-60,h/2,7,'#e53e3e');U.label(c,w/2,h/2-18,'360 km','#4a5568',13);U.label(c,w/2,40,'速度和 = 75+45 = 120 km/h → 360÷120 = 3 h','#2d3748',15);}},
+       {title:'验证',text:'甲走 75×3=225 km，乙走 45×3=135 km，225+135=360 km ✓',
+        draw(c,w,h){U.clear(c,w,h);const mx=60+(w-120)*(225/360);U.line(c,60,h/2,w-60,h/2,'#a0aec0',3);U.dot(c,mx,h/2,10,'#38a169');U.line(c,60,h/2,mx,h/2,'#3182ce',3);U.line(c,mx,h/2,w-60,h/2,'#e53e3e',3);U.label(c,(60+mx)/2,h/2+20,'甲 225 km','#3182ce',12);U.label(c,(mx+w-60)/2,h/2+20,'乙 135 km','#e53e3e',12);}}
+     ]},
+    {question:'甲、乙两人同时从 A、B 两地出发相向而行。甲每分钟走 80 米，乙每分钟走 70 米，6 分钟后相遇。A、B 两地相距多少米？',
+     hint:'求总路程',
+     steps:[
+       {title:'分析',text:'已知速度和与时间，求总路程。这是相遇问题的逆向变形：路程 = 速度和 × 时间。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'已知：速度和=80+70=150 m/min , 时间=6 min','#2d3748',14);U.label(c,w/2,55,'求：总路程 = ？','#e53e3e',14);U.label(c,w/2,90,'路程 = 150 × 6 = 900 米','#38a169',16);U.line(c,60,h/2+30,w-60,h/2+30,'#a0aec0',3);U.label(c,w/2,h/2+20,'900 m','#4a5568',13);U.dot(c,60,h/2+30,6,'#3182ce');U.dot(c,w-60,h/2+30,6,'#e53e3e');}},
+       {title:'关键区别',text='例题是已知路程求时间（路程÷速度和），这道题是已知时间求路程（速度和×时间）。公式变形：时间 = 路程÷速度和 ↔ 路程 = 速度和×时间。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2-20,'S = V×t','#5a67d8',22);U.label(c,w/2-100,h/2+20,'例题：t = S÷V','#718096',14);U.label(c,w/2+100,h/2+20,'本题：S = V×t','#e53e3e',14);U.arrow(c,w/2-40,h/2,w/2+40,h/2,'#a0aec0',1.5);}}
+     ]},
+    {question:'甲、乙两人从相距 300 千米的两地相向而行。甲先出发 1 小时，走了 60 千米后乙才出发。乙每小时走 40 千米，甲每小时走 60 千米。乙出发后几小时两人相遇？',
+     hint:'不同时出发',
+     steps:[
+       {title:'分析',text='甲先走 1 小时走了 60 千米，此时两人距离变为 300−60=240 千米。之后两人同时相向而行，变成标准相遇问题。乙出发后时间 = 240÷(60+40) = 2.4 小时。',
+        draw(c,w,h){U.clear(c,w,h);U.line(c,60,h/2,w-60,h/2,'#a0aec0',3);U.label(c,w/2,h/2-18,'总路程 300 km','#4a5568',13);
+         const mx=60+(w-120)*(60/300);U.line(c,60,h/2,mx,h/2,'#3182ce',3);U.label(c,(60+mx)/2,h/2+20,'甲先走 60 km','#3182ce',11);
+         U.line(c,mx,h/2,w-60,h/2,'#cbd5e0',1,[]);U.label(c,(mx+w-60)/2,h/2+40,'剩余 240 km','#38a169',12);U.dot(c,mx,h/2,7,'#ed8936');U.label(c,mx,h/2-22,'1h后','#ed8936',11);}},
+       {title:'求解',text='剩余距离 240 km，速度和 = 60+40 = 100 km/h，时间为 2.4 小时。甲总共走了 3.4 小时（60×3.4=204 km），乙走了 2.4 小时（40×2.4=96 km），204+96=300 km ✓',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'t = (300-60) ÷ (60+40) = 2.4 h','#2d3748',15);U.label(c,w/2,60,'甲总时间 3.4 h，乙时间 2.4 h','#718096',13);}}
+     ]}
+  ],
+  analysis:{
+    similarities:[
+      '核心公式相同：路程 = 速度 × 时间，相遇时间 = 总路程 ÷ 速度和',
+      '都使用"速度和"概念：两人相向而行时，速度可以直接相加',
+      '都可以用线段图表示两地的距离关系',
+      '验证方法相同：各自走的距离之和应等于总路程',
+      '三量关系中（路程、速度、时间），知二求一'
+    ],
+    differences:[
+      '变形题1（数字变化）：仅改变具体数值，解题步骤完全不变——最基础的变形',
+      '变形题2（求总路程）：已知条件从"路程+速度"变为"速度+时间"，公式变形为 S=V×t，属于逆向思维',
+      '变形题3（不同时出发）：增加了时间差，需要先扣除先走的路程，转化为标准相遇模型',
+      '由题1→题3，难度逐步递增：从数值替换→公式逆向→条件增减',
+      '变形题3需要两步思考（先算剩余路程，再算时间），相比例题多了一个中间环节'
+    ]
+  }
+},
+
+// ==================== 2. 追及问题 ====================
+{
+  id:'chase', name:'追及问题', icon:'🏃',
+  example:{
+    question:'小明先出发去学校，每分钟走 60 米。10 分钟后，爸爸发现小明忘带作业，骑车以每分钟 200 米的速度去追。爸爸几分钟能追上小明？',
+    steps:[
+      {title:'第①步：分析初始差距',
+       text:'小明先走了 10 分钟，速度为 60 m/min，所以领先距离 = 60 × 10 = 600 米。爸爸出发时，两人相距 600 米。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.line(c,60,h/2,w-60,h/2,'#a0aec0',3);
+         // Mark initial gap
+         U.dot(c,60,h/2,7,'#3182ce');U.label(c,60,h/2-24,'小明起点','#3182ce',12);
+         const first=60+(w-120)*(150/w);U.dot(c,first,h/2,7,'#38a169');U.label(c,first,h/2-24,'小明 10min后','#3182ce',11);
+         U.line(c,60,h/2,first,h/2,'#3182ce',3);
+         U.label(c,(60+first)/2,h/2+20,'600 m','#e53e3e',13);
+         U.dot(c,60,h/2+30,6,'#e53e3e');U.label(c,60,h/2+48,'爸爸起点','#e53e3e',12);
+       }},
+      {title:'第②步：理解"速度差"概念',
+       text:'爸爸每分钟比小明多走 200 − 60 = 140 米。这个 140 m/min 就是"速度差"。每分钟爸爸能追上 140 米。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.rect(c,w/2-100,60,200,50,'#fff5f5',1);
+         U.label(c,w/2,75,'速度差 = 200 - 60 = 140 m/min','#e53e3e',15);
+         U.label(c,w/2,100,'每分钟追上 140 米','#4a5568',12);
+         U.label(c,w/2,150,'追及时间 = 路程差 ÷ 速度差','#2d3748',15);
+         U.label(c,w/2,175,'= 600 ÷ 140 ≈ 4.29 分钟','#38a169',14);
+       }},
+      {title:'第③步：列式求解并验证',
+       text:'追及时间 = 路程差 ÷ 速度差 = 600 ÷ 140 ≈ 4.29 分钟。验证：小明共走 60×(10+4.29)≈857m，爸爸走 200×4.29≈858m（四舍五入误差），两人位置相同 ✓',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.line(c,60,h/2,w-60,h/2,'#a0aec0',3);
+         const mx=60+(w-120)*0.7;
+         U.dot(c,60,h/2,6,'#3182ce');U.dot(c,mx,h/2,10,'#38a169');
+         U.label(c,mx,h/2-20,'≈4.3 min 追上','#38a169',12);
+         U.line(c,60,h/2,mx,h/2,'#3182ce',2);
+         U.line(c,60,h/2+20,mx,h/2+20,'#e53e3e',2);
+         U.label(c,(60+mx)/2,h/2+40,'小明路线','#3182ce',11);
+         U.label(c,(60+mx)/2,h/2+60,'爸爸路线','#e53e3e',11);
+       }}
+    ]
+  },
+  variants:[
+    {question:'小华先走 8 分钟，每分钟走 55 米。妈妈以每分钟 250 米的速度骑电动车去追。几分钟追上？',
+     hint:'数字变化',
+     steps:[
+       {title:'分析',text:'路程差 = 55×8 = 440 m，速度差 = 250−55 = 195 m/min，时间 = 440÷195 ≈ 2.26 min。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2-10,'路程差 440 m','#e53e3e',15);U.label(c,w/2,h/2+20,'速度差 195 m/min','#3182ce',14);U.label(c,w/2,h/2+50,'时间 ≈ 2.26 min','#38a169',15);}}]} ,
+    {question:'小明每分钟走 60 米，爸爸每分钟走 200 米。两人同时同向出发，多少分钟后爸爸领先小明 700 米？',
+     hint:'求领先距离',
+     steps:[
+       {title:'分析',text:'两人同时出发，但速度不同。每分钟爸爸比小明多走 140 米。领先 700 米需要 700÷140 = 5 分钟。这道题不是追及而是"拉开距离"。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'核心：速度差产生距离差','#2d3748',15);U.label(c,w/2,70,'每分钟差 140 m','#e53e3e',14);U.label(c,w/2,100,'700 ÷ 140 = 5 分钟','#38a169',16);}},
+       {title:'与例题对比',text='例题有初始路程差（先走10分钟），这里是同时出发从零开始拉大差距。公式统一：时间 = 距离差 ÷ 速度差。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2-10,'追及：初始有距离差','#3182ce',15);U.label(c,w/2,h/2+10,'拉开：初始距离为0','#e53e3e',15);U.label(c,w/2,h/2+40,'公式统一：t = ΔS ÷ ΔV','#5a67d8',16);}}]} ,
+    {question:'甲、乙两人从 A 地向 B 地走。甲每小时走 5 千米，出发 2 小时后乙出发。乙每小时走 8 千米，同时甲在乙前方 4 千米处休息了 30 分钟。乙出发后几小时追上甲？',
+     hint:'中途休息（复杂条件）',
+     steps:[
+       {title:'分析',text:'甲在前 2 小时走了 5×2=10 km，离A地 10 km。休息30min（0.5h）期间甲不动，乙走了 8×0.5=4 km。此时甲仍在前方 10−4=6 km 处。之后甲继续以 5 km/h 走，乙以 8 km/h 追。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'阶段1：甲走2h → 10km','#3182ce',13);U.label(c,w/2,50,'阶段2：乙走0.5h，甲休息','#ed8936',13);U.label(c,w/2,70,'此时甲领先 6 km','#e53e3e',14);U.label(c,w/2,100,'追及时间 = 6 ÷ (8-5) = 2 h','#38a169',15);}},
+       {title:'求解',text:'总时间 = 2 + 0.5 + 2 = 4.5 小时。验证：乙实际追了 2.5 小时走 20 km，甲总共走 4 小时走 20 km（休息了0.5h），位置相同 ✓',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2,6,'总时间 4.5 h','#5a67d8',16);U.label(c,w/2-100,h/2+30,'甲：5×(2+2)=20 km','#3182ce',14);U.label(c,w/2+100,h/2+30,'乙：8×2.5=20 km','#e53e3e',14);}}]}
+  ],
+  analysis:{
+    similarities:[
+      '核心公式统一：追及时间 = 路程差 ÷ 速度差',
+      '都涉及两个运动物体，速度一快一慢，同向而行',
+      '都可以用线段图或时间轴来表示运动过程',
+      '都需要先找出"路程差"和"速度差"两个关键量',
+      '验证方法相同：追上时两者走过的总路程相等，代入时间验证'
+    ],
+    differences:[
+      '变形题1（数字变化）：仅改数字，结构完全不变——最基础的数值替换',
+      '变形题2（求领先距离）：初始距离为0，目标是拉开距离而非填补差距，但公式结构相同——展现了公式的通用性',
+      '变形题3（多阶段）：增加了中途休息和不同时间出发等复杂条件，需要分段分析——属于真实场景建模题',
+      '难度递进：题1只需代公式 → 题2需理解公式含义 → 题3需分阶段推导',
+      '变形题3的"休息"条件引入了"甲有效行走时间 ≠ 乙行走时间"，需要对时间做精细管理'
+    ]
+  }
+},
+
+// ==================== 3. 鸡兔同笼 ====================
+{
+  id:'chicken-rabbit', name:'鸡兔同笼', icon:'🐔',
+  example:{
+    question:'笼子里有鸡和兔共 35 只，共有 94 只脚。鸡和兔各有多少只？',
+    steps:[
+      {title:'第①步：假设全是鸡',
+       text:'假设笼子里 35 只全是鸡，则脚的总数 = 35 × 2 = 70 只脚。但实际有 94 只脚，差了 94 − 70 = 24 只脚。这 24 只脚是"多出来的"。',
+       draw(c,w,h){ U.clear(c,w,h);
+         // Draw chickens
+         for(let i=0;i<7;i++){
+           U.label(c,60+i*80,h/2-40,'🐔','#3182ce',24);
+           U.label(c,60+i*80,h/2-20,'2脚','#4a5568',10);
+         }
+         U.label(c,w/2,h/2+10,'假设 35 只全是鸡：35×2 = 70 只脚','#3182ce',14);
+         U.label(c,w/2,h/2+35,'实际 94 只脚，少了 24 只！','#e53e3e',13);
+       }},
+      {title:'第②步：用一只兔子替换一只鸡',
+       text:'把一只鸡换成一只兔子，脚数增加 4 − 2 = 2 只。需要增加 24 只脚才能达到 94，所以需要换入 24 ÷ 2 = 12 只兔子。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2-80,h/2-30,'🐔 → 🐰','#e53e3e',24);
+         U.label(c,w/2+30,h/2-30,'+2 只脚','#38a169',14);
+         U.label(c,w/2,h/2+10,'每换一只：+2 脚','#4a5568',14);
+         U.label(c,w/2,h/2+35,'24 ÷ 2 = 12 只兔子','#5a67d8',16);
+       }},
+      {title:'第③步：得出答案',
+       text:'兔子 = 12 只，鸡 = 35 − 12 = 23 只。验证：23×2 + 12×4 = 46 + 48 = 94 ✓ 也可以假设全是兔（假设法），结果相同。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.rect(c,w/2-120,h/2-60,100,80,'#ebf4ff',1);
+         U.label(c,w/2-70,h/2-30,'鸡','#3182ce',15);
+         U.label(c,w/2-70,h/2-5,'23 只','#2d3748',20);
+         U.label(c,w/2-70,h/2+20,'46 脚','#4a5568',13);
+         U.rect(c,w/2+20,h/2-60,100,80,'#fff5f5',1);
+         U.label(c,w/2+70,h/2-30,'兔','#e53e3e',15);
+         U.label(c,w/2+70,h/2-5,'12 只','#2d3748',20);
+         U.label(c,w/2+70,h/2+20,'48 脚','#4a5568',13);
+         U.label(c,w/2,h/2+50,'合计 94 脚 ✓','#38a169',14);
+       }}
+    ]
+  },
+  variants:[
+    {question:'停车场有汽车和摩托车共 24 辆，共有 78 个轮子。汽车和摩托车各几辆？（汽车 4 轮，摩托车 2 轮）',
+     hint:'换场景',
+     steps:[
+       {title:'分析',text:'假设全是摩托车：24×2=48 轮。差了 78−48=30 轮。每换一辆汽车 +2 轮，汽车=30÷2=15 辆，摩托车=24−15=9 辆。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'假设全是 🏍 (2轮)','#3182ce',14);U.label(c,w/2,55,'24×2=48 轮·差 30 轮','#e53e3e',14);U.label(c,w/2,85,'汽车 15 辆·摩托 9 辆','#38a169',15);U.label(c,w/2,115,'汽车 15×4=60 + 摩托 9×2=18 = 78 ✓','#4a5568',12);}}]},
+    {question:'鸡兔同笼，鸡比兔多 10 只，共有脚 110 只。鸡兔各几只？',
+     hint:'给出数量关系',
+     steps:[
+       {title:'分析',text:'设兔有 x 只，则鸡有 x+10 只。总脚数：2(x+10) + 4x = 110，即 2x+20+4x=110, 6x=90, x=15。兔15只，鸡25只。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'设兔 x 只，鸡 x+10 只','#5a67d8',15);U.label(c,w/2,60,'2(x+10) + 4x = 110','#2d3748',15);U.label(c,w/2,90,'6x = 90 → x = 15','#38a169',15);U.label(c,w/2,120,'兔 15 只·鸡 25 只 ✓','#4a5568',14);}},
+       {title:'与例题对比',text='例题是已知总数和总脚数（典型的"和积"问题），本题是已知差和总数（"差积"问题）。解法：例题用假设法，本题用方程更直接。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/4,h/2,30,'例题','#3182ce',15);U.label(c,w/4,50,'和+和','#4a5568',15);U.label(c,w/4,75,'假设法','#4a5568',13);U.label(c,w*3/4,25,'本题','#e53e3e',15);U.label(c,w*3/4,50,'差+和','#4a5568',15);U.label(c,w*3/4,75,'方程法','#4a5568',13);}}]},
+    {question:'100 个和尚吃 100 个馒头。大和尚一人吃 3 个，小和尚 3 人吃 1 个。大小和尚各几人？',
+     hint:'分数关系',
+     steps:[
+       {title:'分析',text:'设大和尚 x 人，则吃 3x 个馒头。小和尚 100−x 人，吃 (100−x)/3 个。3x + (100−x)/3 = 100 → 9x + 100 − x = 300 → 8x = 200 → x = 25。大和尚 25 人，小和尚 75 人。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,25,'大和尚 x 人，每人 3 个 → 3x','#3182ce',14);U.label(c,w/2,50,'小和尚 100-x 人，3人 1 个 → (100-x)/3','#e53e3e',14);U.label(c,w/2,80,'3x + (100-x)/3 = 100','#2d3748',15);U.label(c,w/2,110,'大 25·小 75 ✓','#38a169',16);}},
+       {title:'与例题对比',text='表面不同但本质相同：都是"两种类型+总量约束"。鸡兔同笼是头数+脚数约束，本题是人数+馒头数约束。核心：两元一次方程组。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2,40,'本质：两个未知数，两个方程','#5a67d8',16);U.label(c,w/2-100,h/2+10,'类型1 数量 + 类型2 数量 = 总数量','#4a5568',13);U.label(c,w/2+100,h/2+10,'类型1消耗 + 类型2消耗 = 总消耗','#4a5568',13);}}]}
+  ],
+  analysis:{
+    similarities:[
+      '核心模型：两个未知量，用两个约束条件（总量+消耗量）建立方程',
+      '假设法是通用解法：先假设全是一种情况，再根据差值逐步替换',
+      '验证方式统一：将答案代回原条件，检查是否同时满足两个约束',
+      '都可以列二元一次方程组来解，方法灵活'
+    ],
+    differences:[
+      '变形题1（换场景）：本质完全不变，只是把鸡兔换成汽车摩托——表明这类问题有广泛的实际应用',
+      '变形题2（差关系）：已知条件从"总数+总脚数"变为"数量差+总脚数"，需要调整设未知数的策略',
+      '变形题3（分数比例）：引入分数关系（3人吃1个），表面变复杂但仍然是两个线性方程——展现模型普适性',
+      '解法偏好不同：例题推荐假设法（直观），变形题2/3推荐方程法（通用）',
+      '难度递进：题1换汤不换药 → 题2条件微调 → 题3涉及分数计算，认知负荷逐步增加'
+    ]
+  }
+},
+
+// ==================== 4. 植树问题 ====================
+{
+  id:'tree-planting', name:'植树问题', icon:'🌳',
+  example:{
+    question:'一条长 20 米的小路，从头到尾每隔 5 米种一棵树。一共要种多少棵树？',
+    steps:[
+      {title:'第①步：理解"间隔"概念',
+       text:'20 米的路，每 5 米一段，可以分成 20 ÷ 5 = 4 段（间隔）。用线段图画出每个间隔。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.line(c,60,h/2,w-60,h/2,'#a0aec0',3);
+         const segW=(w-120)/4;
+         for(let i=0;i<=4;i++){
+           U.dot(c,60+i*segW,h/2,6,'#38a169');
+           U.label(c,60+i*segW,h/2+20,'r'+(i+1),'#4a5568',10);
+         }
+         for(let i=0;i<4;i++){
+           U.label(c,60+segW/2+i*segW,h/2-18,(i+1)+'段:5m','#718096',11);
+         }
+         U.label(c,w/2,40,'20÷5 = 4 个间隔','#2d3748',15);
+       }},
+      {title:'第②步：两端都栽公式',
+       text:'两端都栽时，棵树 = 间隔数 + 1。因为起点和终点各要种一棵，加上中间的节点，总共 4 + 1 = 5 棵。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.line(c,60,h/2,w-60,h/2,'#a0aec0',3);
+         const segW=(w-120)/4;
+         for(let i=0;i<=4;i++){
+           U.dot(c,60+i*segW,h/2,8,'#38a169');
+         }
+         U.label(c,w/2,30,'🌳 棵树 = 间隔数 + 1 = 5','#38a169',16);
+         U.label(c,w/2,55,'4 个间隔 → 5 棵树','#4a5568',13);
+       }},
+      {title:'第③步：三种情况对比',
+       text:'两端都栽：棵数 = 段数+1（4+1=5棵）。只一端栽：棵数 = 段数（4棵）。两端不栽：棵数 = 段数−1（4−1=3棵）。根据题意选公式。',
+       draw(c,w,h){ U.clear(c,w,h);
+         const y1=50,y2=90,y3=130,segW=(w-120)/4;
+         // 两端都栽
+         U.line(c,60,y1,w-60,y1,'#a0aec0',2);
+         for(let i=0;i<=4;i++) U.dot(c,60+i*segW,y1,5,'#38a169');
+         U.labelL(c,w-60+8,y1,'=5棵','#38a169',12);
+         // 一端栽
+         U.line(c,60,y2,w-60,y2,'#a0aec0',2);
+         for(let i=0;i<=3;i++) U.dot(c,60+i*segW,y2,5,'#ed8936');
+         U.labelL(c,w-60+8,y2,'=4棵','#ed8936',12);
+         // 两端不栽
+         U.line(c,60,y3,w-60,y3,'#a0aec0',2);
+         for(let i=1;i<=3;i++) U.dot(c,60+i*segW,y3,5,'#e53e3e');
+         U.labelL(c,w-60+8,y3,'=3棵','#e53e3e',12);
+         U.label(c,w/2,170,'两端都栽：棵=段+1 | 一端栽：棵=段 | 两端不栽：棵=段-1','#2d3748',13);
+       }}
+    ]
+  },
+  variants:[
+    {question:'一条马路长 100 米，从头到尾每隔 4 米种一棵树。一共要种多少棵？',
+     hint:'数字变化',
+     steps:[
+       {title:'分析',text:'间隔数 = 100÷4 = 25，两端都栽：棵数 = 25+1 = 26 棵。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2-10,'100÷4 = 25 个间隔','#2d3748',15);U.label(c,w/2,h/2+20,'25+1 = 26 棵','#38a169',16);}}]},
+    {question:'一个圆形花坛周长 30 米，每隔 3 米种一棵月季。能种多少棵？',
+     hint:'环形植树',
+     steps:[
+       {title:'分析',text:'环形/封闭图形：棵数 = 间隔数！因为首尾相接，不存在"两端"的问题。30÷3 = 10 个间隔 = 10 棵。',
+        draw(c,w,h){U.clear(c,w,h);
+          c.strokeStyle='#a0aec0';c.lineWidth=2;c.beginPath();c.arc(w/2,h/2,80,0,Math.PI*2);c.stroke();
+          for(let i=0;i<10;i++){
+            const a=i*Math.PI*2/10-Math.PI/2;
+            U.dot(c,w/2+80*Math.cos(a),h/2+80*Math.sin(a),5,'#38a169');
+          }
+          U.label(c,w/2,h/2,'10 棵','#38a169',18);
+        }},
+       {title:'关键区别',text='直线植树需要看两端，环形植树首尾相连，间隔数和棵数相等。这是植树问题的一个重要变形。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2-15,'环形：棵数 = 段数','#38a169',18);U.label(c,w/2,h/2+15,'直线：棵数 = 段数 ± 1','#4a5568',14);}}]},
+    {question:'一条路长 120 米，在路的两旁从头到尾每隔 5 米种一棵树。一共种多少棵？',
+     hint:'两旁种树',
+     steps:[
+       {title:'分析',text:'先算一旁：120÷5 = 24 个间隔，两端都栽 = 24+1 = 25 棵。两旁：25×2 = 50 棵。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'一旁：120÷5=24段，24+1=25棵','#3182ce',14);U.label(c,w/2,60,'两旁：25×2 = 50 棵','#38a169',16);U.label(c,w/2,90,'注意：不要忘了"两旁"这个条件！','#e53e3e',13);}},
+       {title:'易错提醒',text='很多同学算出 25 棵就停了，忘了要乘 2。审题时"两旁""两侧"这样的词需要特别留意。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2,'⚠ 常见错误：只算一旁 25 棵','#e53e3e',15);U.label(c,w/2,h/2+30,'✅ 正确：两旁共 50 棵','#38a169',16);}}]}
+  ],
+  analysis:{
+    similarities:[
+      '核心关系：棵数与间隔数的关系由"端点处理方式"决定',
+      '都需要先算出间隔数：总长 ÷ 间距 = 间隔数',
+      '都是在段数基础上 ±1 或不变来求棵数',
+      '都用线段图或几何图形来直观表示间隔和点的关系',
+      '三种情况（都栽/一端栽/都不栽）在所有题型中都适用'
+    ],
+    differences:[
+      '变形题1（数字变化）：最简单的数值替换，两端都栽公式不变',
+      '变形题2（环形）：场景从直线变为封闭图形，公式简化为"棵数=段数"——展现了几何形状对公式的影响',
+      '变形题3（两旁）：增加了一个维度（两侧），需要在算出一侧结果后再乘2——考察"不要漏条件"',
+      '封闭图形中不存在端点问题，这是与直线问题最本质的区别',
+      '两旁问题是"直线 × 2"的组合，属于多层嵌套条件'
+    ]
+  }
+},
+
+// ==================== 5. 工程问题 ====================
+{
+  id:'work', name:'工程问题', icon:'🔧',
+  example:{
+    question:'一项工程，甲单独做 12 天完成，乙单独做 18 天完成。两人合作，多少天可以完成？',
+    steps:[
+      {title:'第①步：把总工作量看作单位"1"',
+       text:'设总工作量为 1。甲每天完成 1/12，乙每天完成 1/18。这是工程问题的关键——用分数表示工作效率。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.rect(c,60,40,w-120,h-80,'#ebf4ff',1);
+         U.label(c,w/2,80,'总工作量 = 1','#5a67d8',16);
+         U.label(c,w/2,130,'甲每天：1÷12 = 1/12','#3182ce',14);
+         U.label(c,w/2,155,'乙每天：1÷18 = 1/18','#e53e3e',14);
+       }},
+      {title:'第②步：算"合效率"并求时间',
+       text:'两人合作每天完成 1/12 + 1/18 = 3/36 + 2/36 = 5/36。合作时间 = 1 ÷ (5/36) = 36/5 = 7.2 天。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,50,'合作效率：1/12 + 1/18','#2d3748',15);
+         U.label(c,w/2,75,'= 3/36 + 2/36 = 5/36','#5a67d8',15);
+         U.label(c,w/2,110,'时间 = 1 ÷ 5/36 = 36/5','#38a169',15);
+         U.label(c,w/2,135,'= 7.2 天','#38a169',18);
+       }},
+      {title:'第③步：验证',
+       text:'7.2 天中，甲完成 7.2×(1/12) = 0.6 = 3/5，乙完成 7.2×(1/18) = 0.4 = 2/5。3/5 + 2/5 = 1 ✓',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.rect(c,80,60,(w-160)*0.6,40,'#3182ce',0.7);
+         U.rect(c,80+(w-160)*0.6,60,(w-160)*0.4,40,'#e53e3e',0.7);
+         U.label(c,80,90,'甲 3/5 (60%)','#fff',12);
+         U.label(c,80+(w-160)*0.6,90,'乙 2/5 (40%)','#fff',12);
+         U.label(c,w/2,130,'合计 100% ✓','#38a169',15);
+       }}
+    ]
+  },
+  variants:[
+    {question:'一项工程，甲单独做 15 天完成，乙单独做 20 天完成。两人合作多少天完成？',
+     hint:'数字变化',
+     steps:[
+       {title:'分析',text:'合效率 = 1/15+1/20 = 4/60+3/60 = 7/60。时间 = 1÷(7/60) = 60/7 ≈ 8.57 天。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2-10,'1/15+1/20 = 7/60','#5a67d8',15);U.label(c,w/2,h/2+20,'60÷7 ≈ 8.57 天','#38a169',16);}}]},
+    {question:'一项工程，甲单独做 10 天完成。甲做 3 天后，乙加入一起做，又过 3 天完成。乙单独做要多少天？',
+     hint:'求乙效率',
+     steps:[
+       {title:'分析',text:'甲 3 天完成 3/10。剩下 7/10 由两人 3 天合作完成，合效率 = (7/10)÷3 = 7/30。甲效率 1/10，乙效率 = 7/30−1/10 = 4/30 = 2/15，乙单独需 15/2 = 7.5 天。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'甲3天 → 3/10','#3182ce',14);U.label(c,w/2,55,'剩余 7/10','#e53e3e',14);U.label(c,w/2,80,'合效率 = 7/10 ÷ 3 = 7/30','#5a67d8',14);U.label(c,w/2,110,'乙效率 = 7/30-1/10 = 2/15','#38a169',14);U.label(c,w/2,140,'乙单独：15/2 = 7.5 天','#38a169',16);}},
+       {title:'与例题对比',text='例题是已知两人效率求合作时间（正向），本题是已知合作时间反推单人效率（逆向）。需要逆向推导，思维难度更高。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/4,h/2,'例题','#3182ce',15);U.label(c,w/4,h/2+25,'效率→时间','#4a5568',13);U.label(c,w*3/4,h/2,'本题','#e53e3e',15);U.label(c,w*3/4,h/2+25,'时间→效率','#4a5568',13);U.arrow(c,w/4+40,h/2,w*3/4-40,h/2,'#a0aec0',1.5);}}]},
+    {question:'一件工作，甲单独做需要 20 天。甲做 8 天后因故离开，乙接着做了 9 天才完成。如果乙单独做，需要多少天？',
+     hint:'先后接替',
+     steps:[
+       {title:'分析',text:'甲 8 天完成 8/20 = 2/5 = 0.4。乙 9 天完成剩余 0.6。乙的效率 = 0.6÷9 = 1/15。乙单独需 15 天。',
+        draw(c,w,h){U.clear(c,w,h);U.rect(c,80,60,(w-160)*0.4,40,'#3182ce',0.7);U.label(c,80,90,'甲 2/5','#fff',12);U.rect(c,80+(w-160)*0.4,60,(w-160)*0.6,40,'#e53e3e',0.7);U.label(c,80+(w-160)*0.4,90,'乙 3/5','#fff',12);U.label(c,w/2,130,'乙效率 = 0.6÷9 = 1/15 → 15天','#38a169',14);}},
+       {title:'与例题对比',text='合作是"同时做"，本题是"先后做"。虽然条件变化，但核心不变：总工作量=1，每人贡献=效率×时间，各段之和=1。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2-15,'合作：甲+乙 同时','#3182ce',14);U.label(c,w/2,h/2+15,'先后：甲→乙 依次','#e53e3e',14);U.label(c,w/2,h/2+45,'本质：∑(效率×时间) = 1','#5a67d8',15);}}]}
+  ],
+  analysis:{
+    similarities:[
+      '核心模型：总工作量=1，每人工作效率=1/单独完成天数',
+      '基本公式：完成工作量 = 工作效率 × 工作时间',
+      '多人合作时：合效率 = 各人效率之和',
+      '都用分数运算，需要通分和倒数运算',
+      '最终验证方式相同：各人完成的工作量加起来=1'
+    ],
+    differences:[
+      '变形题1（数字变化）：纯数值替换，结构完全一致',
+      '变形题2（求单人效率）：从正向（效率→时间）变为逆向（时间→效率），需要解方程',
+      '变形题3（先后接替）：从"同时合作"变为"分阶段"，需要把总工作量分段拆分',
+      '合作问题只需一次计算，先后接替问题需要分段计算各阶段完成量',
+      '难度递进：直接代公式 → 逆向推导 → 多阶段分段计算'
+    ]
+  }
+},
+
+// ==================== 6. 分数应用题 ====================
+{
+  id:'fraction', name:'分数应用题', icon:'🍕',
+  example:{
+    question:'一桶油，第一次用去 1/4，第二次用去剩下的 2/5，还剩 18 千克。这桶油原来有多少千克？',
+    steps:[
+      {title:'第①步：找单位"1"，画线段图',
+       text:'原来的油是单位"1"。第一次用去 1/4，剩下 1 - 1/4 = 3/4。第二次用去剩下的 2/5 = 用去 3/4 × 2/5 = 6/20 = 3/10。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.rect(c,60,h/2-25,w-120,50,'#e2e8f0',1);
+         U.rect(c,60,h/2-25,(w-120)*0.25,50,'#3182ce',0.6);
+         U.label(c,60+(w-120)*0.125,h/2,'用 1/4','#fff',12);
+         U.rect(c,60+(w-120)*0.25,h/2-25,(w-120)*0.75,50,'#ebf4ff',1);
+         U.label(c,60+(w-120)*0.625,h/2,'剩 3/4','#4a5568',12);
+         U.label(c,w/2,h/2+40,'第二次用去 3/4 × 2/5 = 3/10','#e53e3e',13);
+       }},
+      {title:'第②步：算剩余占比',
+       text:'第一次用去 1/4 = 2.5/10，第二次用去 3/10。总共用去 2.5/10 + 3/10 = 5.5/10 = 11/20。剩余 = 1 - 11/20 = 9/20。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.rect(c,60,h/2-25,w-120,50,'#e2e8f0',1);
+         U.rect(c,60,h/2-25,(w-120)*0.25,50,'#3182ce',0.5);
+         U.rect(c,60+(w-120)*0.25,h/2-25,(w-120)*0.3,50,'#e53e3e',0.5);
+         U.rect(c,60+(w-120)*0.55,h/2-25,(w-120)*0.45,50,'#38a169',0.3);
+         U.label(c,60+(w-120)*0.125,h/2-40,'1/4','#3182ce',11);
+         U.label(c,60+(w-120)*0.4,h/2-40,'3/10','#e53e3e',11);
+         U.label(c,60+(w-120)*0.775,h/2-40,'剩9/20','#38a169',12);
+       }},
+      {title:'第③步：求原重量',
+       text='剩余 18 千克对应原来油的 9/20。原来油重 = 18 ÷ (9/20) = 18 × 20/9 = 40 千克。验证：第一次用去 10 kg(1/4)，剩 30 kg；第二次用去 12 kg(2/5 of 30)，剩 18 kg ✓',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,40,'18 ÷ (9/20) = 40 kg','#38a169',18);
+         U.label(c,w/2,75,'验证：40×1/4=10 → 剩30','#3182ce',13);
+         U.label(c,w/2,95,'30×2/5=12 → 剩18 ✓','#e53e3e',13);
+       }}
+    ]
+  },
+  variants:[
+    {question:'小华看一本书，第一天看了全书 1/3，第二天看了剩下的 1/2，还剩 30 页。全书多少页？',
+     hint:'数字/场景变化',
+     steps:[
+       {title:'分析',text:'第一天剩 2/3，第二天看 2/3×1/2=1/3。两天共看 1/3+1/3=2/3，剩 1/3。30÷(1/3)=90 页。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,40,'1/3 + (2/3×1/2) = 2/3 已看','#3182ce',14);U.label(c,w/2,70,'剩 1/3 = 30 页','#e53e3e',14);U.label(c,w/2,100,'全书 30×3 = 90 页','#38a169',16);}}]},
+    {question:'一根绳子，第一次剪去 1/3，第二次剪去 2 米，还剩一半。绳子原长多少米？',
+     hint:'混合条件',
+     steps:[
+       {title:'分析',text:'剩一半 = 1/2。第一次剪 1/3，所以第二次剪的 2 米对应 1 - 1/3 - 1/2 = 1/6。原长 = 2÷(1/6) = 12 米。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,35,'第一次：1/3','#3182ce',14);U.label(c,w/2,60,'第二次：2 米 = 1/6','#e53e3e',14);U.label(c,w/2,85,'剩一半：1/2','#38a169',14);U.label(c,w/2,115,'原长 = 2×6 = 12 米','#5a67d8',16);}},
+       {title:'与例题对比',text='例题两次都是分数，本题第二次是具体数量。需要先把具体数量转化为对应的分率（1/6）。这是"量率对应"的核心思想。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2,'关键：2米 = 1/6 → 原长 = 2÷1/6','#5a67d8',15);}}]},
+    {question:'仓库有一批货物，第一次运走 1/5，第二次运走 1/4 吨，这时剩下的比运走的少 0.1 吨。这批货物原有多少吨？',
+     hint:'比较大小',
+     steps:[
+       {title:'分析',text:'设原有 x 吨。第一次运 0.2x，第二次运 0.25 吨。共运走 0.2x+0.25。剩下 x-(0.2x+0.25)=0.8x-0.25。剩下比运走少 0.1：(0.2x+0.25)-(0.8x-0.25)=0.1 → 0.5-0.6x=0.1 → 0.6x=0.4 → x=2/3≈0.67。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'设原有 x 吨','#5a67d8',15);U.label(c,w/2,55,'运走 = 0.2x+0.25','#3182ce',14);U.label(c,w/2,75,'剩下 = 0.8x-0.25','#e53e3e',14);U.label(c,w/2,105,'(运走)-(剩下)=0.1 → x=2/3','#38a169',14);}},
+       {title:'与例题对比',text='例题是纯分数关系，本题混合了分数和具体数，还加了比较条件。需要列方程求解，难度明显更大。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2-15,'例题：两个分数条件','#3182ce',14);U.label(c,w/2,h/2+15,'本题：分数+具体数+比较','#e53e3e',14);U.label(c,w/2,h/2+45,'共同点：都需要"量率对应"','#5a67d8',14);}}]}
+  ],
+  analysis:{
+    similarities:[
+      '核心思想："量率对应"——具体数量与它对应的分率相关联',
+      '都需要找到单位"1"，通常是原来的总量',
+      '剩余部分的分率计算是共同的解题关键',
+      '都用逆推法：从已知剩余量反推单位"1"',
+      '最终都转化为 具体量÷对应分率=单位"1" 的格式'
+    ],
+    differences:[
+      '变形题1（数字场景变化）：两次都是分数条件，结构不变，直接量率对应即可',
+      '变形题2（分数+具体数混合）：第二次给的是具体数量而非分数，需要先找出这 2 米对应的分率',
+      '变形题3（引入比较）：增加了"比……多/少"的条件，需要列出方程，是条件最复杂的一种',
+      '难度递进：纯分数 → 分数+具体数 → 分数+具体数+比较，条件越来越多',
+      '变形题3需要用方程法，而前两题可以用算术法直接求解'
+    ]
+  }
+},
+
+// ==================== 7. 比例问题 ====================
+{
+  id:'ratio', name:'比例问题', icon:'⚖️',
+  example:{
+    question:'学校把 360 本图书按 3:4:5 分给三、四、五年级。每个年级分得多少本？',
+    steps:[
+      {title:'第①步：理解比的意义',
+       text:'按 3:4:5 分配，意思是三年级得 3 份，四年级得 4 份，五年级得 5 份。总共 3+4+5=12 份。',
+       draw(c,w,h){ U.clear(c,w,h);
+         const tw=w-160, y=h/2-25;
+         const r=[360*3/12,360*4/12,360*5/12];
+         let cx=80;
+         ['三','四','五'].forEach((g,i)=>{
+           const bw=tw*(r[i]/360);
+           U.rect(c,cx,y,bw-4,50,['#3182ce','#38a169','#e53e3e'][i],0.5+i*0.2);
+           U.label(c,cx+bw/2,y+15,g,'#fff',16);
+           U.label(c,cx+bw/2,y+38,r[i]+'本','#fff',12);
+           cx+=bw;
+         });
+         U.label(c,w/2,h/2+55,'总数 360 = 12 份 → 每份 360÷12 = 30 本','#2d3748',13);
+       }},
+      {title:'第②步：求每份多少',
+       text:'总份数 = 3+4+5 = 12 份。每份 = 360÷12 = 30 本。三年级 3×30=90 本，四年级 4×30=120 本，五年级 5×30=150 本。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,40,'三年：3×30 = 90 本','#3182ce',14);
+         U.label(c,w/2,65,'四年：4×30 = 120 本','#38a169',14);
+         U.label(c,w/2,90,'五年：5×30 = 150 本','#e53e3e',14);
+         U.label(c,w/2,125,'合计：90+120+150 = 360 ✓','#4a5568',13);
+       }},
+      {title:'第③步：验证',
+       text:'90:120:150 = 9:12:15 = 3:4:5 ✓  总和 360 ✓  这是按比例分配的标准解法。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,50,'90:120:150','#2d3748',16);
+         U.label(c,w/2,75,'÷30 → 3:4:5 ✓','#38a169',14);
+       }}
+    ]
+  },
+  variants:[
+    {question:'把 500 克糖水按 2:3 分成两杯。每杯各多少克？',
+     hint:'两项比例',
+     steps:[
+       {title:'分析',text:'总份数 2+3=5 份。每份 500÷5=100 g。第一杯 2×100=200 g，第二杯 3×100=300 g。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2-10,'2+3=5份，每份100g','#5a67d8',14);U.label(c,w/2,h/2+15,'200g : 300g = 2:3 ✓','#38a169',15);}}]},
+    {question:'甲、乙、丙三人的存款比是 5:3:2。已知甲比丙多 90 元，三人各存了多少钱？',
+     hint:'已知差值',
+     steps:[
+       {title:'分析',text:'甲比丙多 5−2=3 份，对应 90 元。每份 90÷3=30 元。甲 5×30=150 元，乙 3×30=90 元，丙 2×30=60 元。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'甲:丙 = 5:2 → 差 3 份','#2d3748',14);U.label(c,w/2,55,'3 份 = 90 元 → 每份 30 元','#e53e3e',14);U.label(c,w/2,85,'甲 150·乙 90·丙 60','#38a169',15);}},
+       {title:'与例题对比',text='例题已知总量（和），本题已知差值。前者分步：总量÷总份数→各份值。后者分步：差值÷份数差→各份值。结构对称。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/4,h/2,'例题：知"和"','#3182ce',14);U.label(c,w/4,h/2+25,'360÷12','#4a5568',13);U.label(c,w*3/4,h/2,'本题：知"差"','#e53e3e',14);U.label(c,w*3/4,h/2+25,'90÷3','#4a5568',13);U.label(c,w/2,h/2+50,'对称结构：每份=和÷总份 或 每份=差÷份差','#5a67d8',13);}}]},
+    {question:'学校买来足球、篮球、排球共 45 个。足球与篮球的个数比是 2:3，篮球与排球的比是 4:1。三种球各买了多少个？',
+     hint:'连比',
+     steps:[
+       {title:'分析',text:'足球:篮球=2:3=8:12，篮球:排球=4:1=12:3。连比：足球:篮球:排球=8:12:3。总份数=8+12+3=23。每份=45÷23≈1.957（不是整数，需检查题目）……但题目可能有误，我们按正比例关系理解即可。如果总份数不是整数倍，练的是比例思维。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,25,'统一篮球的份数','#5a67d8',14);U.label(c,w/2,50,'2:3→8:12, 4:1→12:3','#4a5568',13);U.label(c,w/2,75,'连比 8:12:3','#38a169',15);U.label(c,w/2,105,'总份数 23','#2d3748',14);}},
+       {title:'与例题对比',text='例题直接给了三项比，本题需要通过中间量（篮球）统一两份比的份数，合成连比。多了"统一份数"这一步。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2,'关键：找到公共量（篮球）','#e53e3e',14);U.label(c,w/2,h/2+30,'把两个比统一为一个连比','#5a67d8',14);}}]}
+  ],
+  analysis:{
+    similarities:[
+      '核心步骤：求总份数 → 求每份的值 → 各份 × 每份值 = 各数量',
+      '都基于"份数"概念，比例本质上是一种特殊的除法',
+      '最终验证都是检查比例关系和总量的对应性',
+      '都可以用条形图来直观展示各部分的分配情况',
+      '公因数（每份的值）连接了比例关系和实际数量'
+    ],
+    differences:[
+      '变形题1（两项）：降维到最简单情况（两项比例），适合初学者练手',
+      '变形题2（已知差值）：条件从"和"变为"差"，考验对份数差的理解——需要从不同角度使用份数概念',
+      '变形题3（连比合成）：需要找公共量的最小公倍数来统一份数，多了一步关键的"化连比"操作',
+      '难度递进：两项 → 三项（值已知）→ 三项（需合成）',
+      '连比是比例问题的重要升级，需要理解比的基本性质（同时乘除不变）'
+    ]
+  }
+},
+
+// ==================== 8. 年龄问题 ====================
+{
+  id:'age', name:'年龄问题', icon:'🎂',
+  example:{
+    question:'今年爸爸 40 岁，小明 12 岁。多少年后爸爸的年龄是小明的 2 倍？',
+    steps:[
+      {title:'第①步：抓住"年龄差不变"',
+       text:'年龄差 = 40 − 12 = 28 岁。不管过多少年，爸爸永远比小明大 28 岁。这是年龄问题的核心！',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,40,'✋ 年龄差永远不变！','#e53e3e',16);
+         U.label(c,w/2,70,'今年：40 − 12 = 28 岁','#2d3748',14);
+         U.label(c,w/2,98,'N 年后：(40+N) − (12+N) = 28 岁','#5a67d8',13);
+         U.label(c,w/2,125,'差值始终是 28','#38a169',13);
+       }},
+      {title:'第②步：利用差倍关系',
+       text:'当爸爸年龄是小明 2 倍时，年龄差 = 小明年龄（因为 2倍−1倍 = 1倍 = 差）。所以小明那时 28 岁，现在 12 岁，需要 28−12=16 年。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.line(c,60,h/2,w-60,h/2,'#e2e8f0',3);
+         U.rect(c,100,h/2-20,120,40,'#3182ce',0.7);
+         U.label(c,160,h/2,'小明(1倍) 28岁','#fff',13);
+         U.rect(c,220,h/2-20,240,40,'#e53e3e',0.7);
+         U.label(c,340,h/2,'爸爸(2倍) 56岁','#fff',13);
+         U.label(c,w/2,h/2+40,'28−12 = 16 年后','#38a169',16);
+       }},
+      {title:'第③步：验证',
+       text:'16 年后：爸爸 40+16=56 岁，小明 12+16=28 岁。56 ÷ 28 = 2 ✓',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,50,'16 年后…','#5a67d8',14);
+         U.label(c,w/2,80,'爸爸：40+16 = 56 岁','#e53e3e',14);
+         U.label(c,w/2,105,'小明：12+16 = 28 岁','#3182ce',14);
+         U.label(c,w/2,135,'56 ÷ 28 = 2 ✓','#38a169',16);
+       }}
+    ]
+  },
+  variants:[
+    {question:'今年妈妈 36 岁，女儿 9 岁。多少年前妈妈的年龄是女儿的 4 倍？',
+     hint:'往前推算',
+     steps:[
+       {title:'分析',text:'年龄差 = 36−9 = 27 岁不变。当妈妈是女儿 4 倍时，差对应 3 倍。女儿 27÷3=9 岁——正好是今年！所以是 0 年前。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'差 27 岁，对应 3 倍','#2d3748',14);U.label(c,w/2,60,'女儿 27÷3 = 9 岁（恰好今年）','#38a169',14);U.label(c,w/2,90,'答案：0 年前（今年就满足）','#5a67d8',15);}},
+       {title:'与例题对比',text='例题往后算（多少年后），本题往前算（多少年前）。但核心逻辑完全相同：年龄差不变 + 倍数关系。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/4,h/2,'向后：未来','#3182ce',14);U.label(c,w*3/4,h/2,'向前：过去','#e53e3e',14);U.label(c,w/2,h/2+30,'共同：差不变 ÷ 倍数差','#5a67d8',14);}}]},
+    {question:'今年小明和爸爸的年龄和是 50 岁。5 年后爸爸的年龄是小明的 3 倍。今年两人各多少岁？',
+     hint:'年龄和+倍数',
+     steps:[
+       {title:'分析',text:'5 年后两人都长 5 岁，年龄和变成 50+10=60 岁。爸爸是小明 3 倍，则小明(1份)+爸爸(3份)=60，小明 60÷4=15 岁，爸爸 45 岁。退回今年：小明 15−5=10 岁，爸爸 45−5=40 岁。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,25,'5年后年龄和：50+10=60','#3182ce',14);U.label(c,w/2,50,'小明 60÷4=15，爸爸 45','#5a67d8',14);U.label(c,w/2,80,'今年：小明 10，爸爸 40','#38a169',15);}},
+       {title:'与例题对比',text='例题是已知年龄和差关系，本题是已知年龄和+未来倍数关系。需要先算未来再做减法。多了一个时间维度。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2,'关键：未来年龄和 = 今年和 + 2×年数','#e53e3e',14);}}]},
+    {question:'甲对乙说："当我的岁数是你现在的岁数时，你才 4 岁。"乙对甲说："当我的岁数是你现在的岁数时，你将 61 岁。"两人现在各多少岁？',
+     hint:'复杂对话型',
+     steps:[
+       {title:'分析',text:'设甲现在 x 岁，乙现在 y 岁。差 d=x−y。"甲是乙现在时"即 x 变为 y（退回 d 年），乙变为 y−d=4，即 y−(x−y)=4 → 2y−x=4。另一条件：y 变为 x（前进 d 年），甲变为 x+d=61，即 x+(x−y)=61 → 2x−y=61。解得 x=42, y=23。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,25,'2y−x=4','#3182ce',14);U.label(c,w/2,50,'2x−y=61','#e53e3e',14);U.label(c,w/2,80,'x=42, y=23','#38a169',16);}},
+       {title:'与例题对比',text='例题是标准差倍问题，本题是经典的"岁数对话"题型。需要根据对话构建两个关于年龄差的方程，虽然复杂但本质仍是"年龄差不变"。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2-10,'本质：年龄差 d 不变','#5a67d8',15);U.label(c,w/2,h/2+15,'两条线索 → 两个方程 → 求解','#4a5568',13);U.label(c,w/2,h/2+40,'d = x−y = 42−23 = 19 岁','#38a169',14);}}]}
+  ],
+  analysis:{
+    similarities:[
+      '最核心原理：年龄差永远不变，无论往前还是往后',
+      '基本公式：年龄差 ÷ (倍数−1) = 较小者的年龄（倍数时）',
+      '都可以转化为"差倍问题"来求解',
+      '验证方法：带入年数后确认倍数关系和差值不变',
+      '用时间轴可以帮助理清"现在、过去、未来"三个时间点的关系'
+    ],
+    differences:[
+      '变形题1（往前算）：方向从"多少年后"变为"多少年前"，但公式完全对称——体现了年龄差的双向适用性',
+      '变形题2（年龄和+倍数）：增加了年龄和条件，需要知道"大家同增同减"导致年龄和每年增加人数×年数',
+      '变形题3（对话型）：最复杂的一种，需要通过两人的对话构建方程，涉及两次时间跳跃——但底层仍是年龄差不变',
+      '难度递进明显：直接差倍 → 年龄和参与 → 多时间点对话推理',
+      '对话型年龄问题是小学奥数经典难题，需要较强的方程构建能力'
+    ]
+  }
+},
+
+// ==================== 9. 盈亏问题 ====================
+{
+  id:'profit-loss', name:'盈亏问题', icon:'💰',
+  example:{
+    question:'老师给小朋友分糖果。如果每人分 4 颗，则多出 12 颗；如果每人分 6 颗，则少 8 颗。有多少个小朋友？多少颗糖果？',
+    steps:[
+      {title:'第①步：理解盈亏关系',
+       text:'第一种分法盈（多）12 颗，第二种分法亏（少）8 颗。从第一次到第二次，每人多分 6−4=2 颗，总差为 12+8=20 颗。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,40,'第一种：每人 4 颗 → 多 12 颗','#3182ce',14);
+         U.label(c,w/2,65,'第二种：每人 6 颗 → 少 8 颗','#e53e3e',14);
+         U.label(c,w/2,100,'每人多了 2 颗','#ed8936',14);
+         U.label(c,w/2,125,'总共差了 12 + 8 = 20 颗','#5a67d8',16);
+       }},
+      {title:'第②步：求人数',
+       text='20 颗 ÷ 2 颗/人 = 10 人。因为每人多拿 2 颗，总共多消耗了 20 颗糖果（把盈的 12 颗分掉 + 再补上缺的 8 颗）。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,50,'人数 = (盈 + 亏) ÷ 每人差','#5a67d8',16);
+         U.label(c,w/2,85,'= (12 + 8) ÷ (6 − 4)','#2d3748',15);
+         U.label(c,w/2,115,'= 20 ÷ 2 = 10 人','#38a169',18);
+       }},
+      {title:'第③步：求糖果总数',
+       text='糖果 = 10 × 4 + 12 = 52 颗（用第一种分法）。验证：10 × 6 − 8 = 52 颗 ✓',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,50,'10 × 4 + 12 = 52 颗 ✓','#3182ce',15);
+         U.label(c,w/2,80,'10 × 6 − 8 = 52 颗 ✓','#e53e3e',15);
+       }}
+    ]
+  },
+  variants:[
+    {question:'学校给新生安排宿舍。每间住 7 人则多出 5 人没床位；每间住 8 人则空出 7 个床位。有几间宿舍？多少新生？',
+     hint:'场景变化',
+     steps:[
+       {title:'分析',text:'一盈一亏：盈 5 人，亏 7 人。总差 = 5+7=12，每间差 = 8−7=1。宿舍 12÷1=12 间。新生 12×7+5=89 人，验证 12×8−7=89 ✓',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,40,'(5+7)÷1 = 12 间','#5a67d8',15);U.label(c,w/2,70,'12×7+5=89 人','#38a169',15);}}]},
+    {question:'给小树浇水，如果每人浇 5 棵，还剩 10 棵没浇；如果每人浇 7 棵，还剩 2 棵没浇。有多少人？多少棵树？',
+     hint:'两盈',
+     steps:[
+       {title:'分析',text:'第一种剩 10 棵（盈 10），第二种剩 2 棵（盈 2）。从第一次到第二次，每人多浇 2 棵，多浇了 10−2=8 棵。人数 = (10−2)÷2 = 4 人。树 = 4×5+10 = 30 棵。验证：4×7+2=30 ✓',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'两盈：(盈1−盈2)÷每人差','#5a67d8',15);U.label(c,w/2,60,'(10−2)÷(7−5) = 4 人','#38a169',15);}},
+       {title:'与例题对比',text='例题是一盈一亏，本题是两盈。公式不同：一盈一亏用 (盈+亏)，两盈用 (大盈−小盈)。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/4,h/2,'一盈一亏','#3182ce',14);U.label(c,w/4,h/2+25,'(盈+亏)÷差','#4a5568',14);U.label(c,w*3/4,h/2,'两盈','#e53e3e',14);U.label(c,w*3/4,h/2+25,'(大盈−小盈)÷差','#4a5568',14);}}]},
+    {question:'把一批练习本分给学生。如果每人分 4 本，则缺 20 本；如果每人分 2 本，则缺 4 本。有多少学生？多少本？',
+     hint:'两亏',
+     steps:[
+       {title:'分析',text:'两亏：亏 20 本和亏 4 本。总差 = 20−4 = 16 本（第一次比第二次多缺 16 本），每人差 4−2=2 本。学生数 = 16÷2 = 8 人。本子 = 8×4−20 = 12 本。验证：8×2−4=12 ✓',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'两亏：(大亏−小亏)÷每人差','#5a67d8',15);U.label(c,w/2,60,'(20−4)÷2 = 8 人','#38a169',15);U.label(c,w/2,90,'8×4−20 = 12 本','#38a169',15);}},
+       {title:'与例题对比',text:'盈亏问题的三种情况是对称的：一盈一亏、两盈、两亏。公式在结构上统一：总差 ÷ 每人差 = 人数，关键是要正确计算总差。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'三种情况，一个框架','#5a67d8',16);U.arrow(c,w/2-120,80,w/2+120,80,'#a0aec0',1);U.label(c,w/2-140,60,'盈+亏','#3182ce',13);U.label(c,100,100,'大盈-小盈','#38a169',13);U.label(c,w-100,100,'大亏-小亏','#e53e3e',13);U.label(c,w/2,130,'人数 = 总差 ÷ 每人差','#5a67d8',15);}}]}
+  ],
+  analysis:{
+    similarities:[
+      '核心公式：人数 = 总差 ÷ 每人差，这是所有盈亏问题的统一框架',
+      '都需要比较两种分配方案，找出总差值',
+      '都可以用"每份差值"来解释为什么总差会产生',
+      '验证方法统一：用两种分配方式分别计算总数，结果应一致',
+      '都属于"两次分配"类型，本质是用差值法求解'
+    ],
+    differences:[
+      '变形题1（场景变化）：一盈一亏，和例题完全一样，只是换了个背景故事',
+      '变形题2（两盈）：都剩余（都多了），总差 = 大盈 − 小盈 —— 和例题的 盈+亏 不同',
+      '变形题3（两亏）：都不够（都缺了），总差 = 大亏 − 小亏 —— 又一个公式变种',
+      '三种情况体现了盈亏问题的完整分类体系，覆盖所有可能',
+      '关键是判断"是盈还是亏"然后选择正确的总差计算公式'
+    ]
+  }
+},
+
+// ==================== 10. 流水行船 ====================
+{
+  id:'boat-stream', name:'流水行船', icon:'⛵',
+  example:{
+    question:'一艘轮船在静水中的速度是 20 千米/时，水流速度是 4 千米/时。它从 A 港逆流而上到 B 港用了 5 小时。从 B 港顺流返回 A 港需要多少小时？',
+    steps:[
+      {title:'第①步：求逆水速度和路程',
+       text:'逆水速度 = 静水速度 − 水流速度 = 20 − 4 = 16 km/h。逆水 5 小时，路程 = 16 × 5 = 80 千米。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.arrow(c,80,h/2,w-80,h/2,'#3182ce',3);
+         U.label(c,w/2,h/2-30,'A 港 → B 港（逆流）','#3182ce',14);
+         U.label(c,w/2,h/2+20,'速度：20 − 4 = 16 km/h','#e53e3e',14);
+         U.label(c,w/2,h/2+45,'路程：16 × 5 = 80 km','#38a169',14);
+       }},
+      {title:'第②步：求顺水速度和返回时间',
+       text:'顺水速度 = 静水速度 + 水流速度 = 20 + 4 = 24 km/h。返回时间 = 80 ÷ 24 = 10/3 ≈ 3.33 小时。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.arrow(c,w-80,h/2,80,h/2,'#e53e3e',3);
+         U.label(c,w/2,h/2-30,'B 港 → A 港（顺流）','#e53e3e',14);
+         U.label(c,w/2,h/2+20,'速度：20 + 4 = 24 km/h','#38a169',14);
+         U.label(c,w/2,h/2+45,'时间：80 ÷ 24 ≈ 3.33 h','#5a67d8',16);
+       }},
+      {title:'第③步：对比分析',
+       text:'逆水 5 小时 vs 顺水约 3.33 小时。顺水比逆水快了 1.67 小时，因为顺水时水流在"帮忙"，逆水时水流在"阻碍"。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,40,'逆水：16 km/h → 5.0 h','#3182ce',14);
+         U.label(c,w/2,65,'顺水：24 km/h → 3.3 h','#e53e3e',14);
+         U.label(c,w/2,100,'顺水速度快了 8 km/h','#38a169',14);
+         U.label(c,w/2,125,'时间省了 ≈ 1.7 h','#5a67d8',14);
+       }}
+    ]
+  },
+  variants:[
+    {question:'一艘船在静水中速度是 15 km/h，水流速度是 3 km/h。顺流而下 54 km，再逆流返回，一共需要多少时间？',
+     hint:'往返总时间',
+     steps:[
+       {title:'分析',text:'顺水：15+3=18 km/h → 54÷18=3 h。逆水：15−3=12 km/h → 54÷12=4.5 h。总时间=3+4.5=7.5 h。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'顺：54÷18 = 3 h','#3182ce',14);U.label(c,w/2,55,'逆：54÷12 = 4.5 h','#e53e3e',14);U.label(c,w/2,85,'总计：7.5 h','#38a169',16);}}]},
+    {question:'一艘轮船顺流而下 100 千米用了 4 小时，逆流而上 60 千米也用了 4 小时。求静水速度和水流速度。',
+     hint:'求静水和水速',
+     steps:[
+       {title:'分析',text:'顺水速=100÷4=25 km/h，逆水速=60÷4=15 km/h。静水速=(顺+逆)÷2=(25+15)÷2=20 km/h。水速=(顺−逆)÷2=(25−15)÷2=5 km/h。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,25,'顺水：100÷4=25 km/h','#3182ce',14);U.label(c,w/2,50,'逆水：60÷4=15 km/h','#e53e3e',14);U.label(c,w/2,80,'静水：(25+15)÷2=20 km/h','#38a169',14);U.label(c,w/2,105,'水速：(25−15)÷2=5 km/h','#5a67d8',14);}},
+       {title:'与例题对比',text='例题是已知静水速和水速求时间（正向），本题是已知时间求静水速和水速（逆向）。公式：静水=(顺+逆)÷2，水速=(顺−逆)÷2。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/4,h/2,'正向','#3182ce',14);U.label(c,w/4,h/2+25,'静水+水速→时间','#4a5568',12);U.label(c,w*3/4,h/2,'逆向','#e53e3e',14);U.label(c,w*3/4,h/2+25,'时间→静水+水速','#4a5568',12);}}]},
+    {question:'一条河的水流速度是 2 km/h。一艘船从 A 到 B 顺流用了 6 小时，从 B 到 A 逆流用了 8 小时。A、B 相距多少千米？',
+     hint:'未知静水速',
+     steps:[
+       {title:'分析',text:'设静水速 v，则(v+2)×6=(v−2)×8 → 6v+12=8v−16 → 2v=28 → v=14 km/h。路程=(14+2)×6=96 km。验证：(14−2)×8=96 ✓',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,25,'(v+2)×6 = (v−2)×8','#5a67d8',15);U.label(c,w/2,55,'6v+12 = 8v−16','#2d3748',14);U.label(c,w/2,80,'v = 14 km/h','#38a169',15);U.label(c,w/2,110,'路程 = 96 km','#38a169',16);}},
+       {title:'与例题对比',text='例题已知静水速，本题未知。但利用"往返路程相等"这一等量关系可以列出方程。这是流水行船问题的进阶解法。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2-10,'关键：往返路程相同','#e53e3e',14);U.label(c,w/2,h/2+20,'顺水速×顺水时 = 逆水速×逆水时','#5a67d8',14);}}]}
+  ],
+  analysis:{
+    similarities:[
+      '核心公式：顺水速 = 静水速 + 水速，逆水速 = 静水速 − 水速',
+      '基本关系：路程 = 速度 × 时间（三量关系始终适用）',
+      '往返问题中：来回路程相等，这是列方程的关键等量关系',
+      '都涉及"静水速度"和"水流速度"两个独立变量',
+      '水流速度同时在"加"和"减"两个方向上起作用，是对称的'
+    ],
+    differences:[
+      '变形题1（往返合计）：在例题基础上加了往返合计，多一步求和——最直接的扩展',
+      '变形题2（求静水速和水速）：已知往返时间和路程，逆向求两个速度分量——需要用到平均数公式',
+      '变形题3（未知静水速）：利用"路程相等"列出方程求解静水速，再算路程——需要参数化思维',
+      '难度递进：单程 → 往返合计 → 逆向求速度 → 含未知数方程',
+      '变形题2/3需要理解"静水速=(顺+逆)÷2"这一核心推论公式'
+    ]
+  }
+},
+
+// ==================== 11. 浓度问题 ====================
+{
+  id:'concentration', name:'浓度问题', icon:'🧪',
+  example:{
+    question:'在 200 克浓度为 15% 的盐水中，加入多少克水，可以使浓度变为 10%？',
+    steps:[
+      {title:'第①步：求出盐的质量（不变量）',
+       text:'盐的质量 = 200 × 15% = 30 克。加水后盐的质量不变，还是 30 克。浓度问题中溶质不变是最重要的切入点。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.rect(c,80,60,w-160,60,'#e2e8f0',1);
+         U.rect(c,80,60,(w-160)*0.15,60,'#3182ce',0.6);
+         U.label(c,80+(w-160)*0.075,90,'盐 30g (15%)','#fff',12);
+         U.label(c,w/2,145,'加水后盐不变：30 g','#e53e3e',14);
+       }},
+      {title:'第②步：求稀释后的总质量',
+       text:'浓度 10% 意味着 30 克盐占总质量的 10%。总质量 = 30 ÷ 10% = 30 ÷ 0.1 = 300 克。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,40,'30 g 盐 = 总质量的 10%','#3182ce',14);
+         U.label(c,w/2,70,'总质量 = 30 ÷ 0.1 = 300 g','#38a169',16);
+       }},
+      {title:'第③步：求加水量',
+       text:'原来 200 克，稀释后 300 克，需要加水 300 − 200 = 100 克。验证：30÷300 = 10% ✓',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,50,'原来：200 g（15%）','#3182ce',14);
+         U.arrow(c,w/2-60,70,w/2+60,70,'#a0aec0',1.5);
+         U.label(c,w/2,90,'加 100 g 水 → 300 g（10%）','#38a169',16);
+       }}
+    ]
+  },
+  variants:[
+    {question:'有 300 克浓度 20% 的糖水，要变成浓度 25%，需要蒸发掉多少克水？',
+     hint:'蒸发浓缩',
+     steps:[
+       {title:'分析',text:'糖 = 300×20% = 60 g不变。浓缩后总质量 = 60÷25% = 240 g。蒸发水 = 300−240 = 60 g。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,30,'糖 60 g 不变','#e53e3e',14);U.label(c,w/2,55,'浓缩后 60÷25%=240g','#5a67d8',14);U.label(c,w/2,85,'蒸发 300−240 = 60 g','#38a169',16);}},
+       {title:'与例题对比',text='例题是加水稀释（浓度降低），本题是蒸发浓缩（浓度升高）。操作相反，但核心完全相同：溶质质量不变。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/4,h/2,'加水 → 变稀','#3182ce',14);U.label(c,w*3/4,h/2,'蒸发 → 变浓','#e53e3e',14);U.label(c,w/2,h/2+30,'共同：溶质不变！','#5a67d8',15);}}]},
+    {question:'有 400 克浓度 10% 的盐水和 600 克浓度 15% 的盐水。混合后浓度是多少？',
+     hint:'混合溶液',
+     steps:[
+       {title:'分析',text:'第一种盐=400×10%=40g，第二种盐=600×15%=90g。总盐=130g，总液=1000g。浓度=130÷1000=13%。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,25,'液1 400g→盐 40g','#3182ce',14);U.label(c,w/2,50,'液2 600g→盐 90g','#e53e3e',14);U.label(c,w/2,80,'混合：盐130g, 液1000g','#5a67d8',14);U.label(c,w/2,110,'浓度 = 13%','#38a169',16);}},
+       {title:'与例题对比',text='例题是单一溶液的稀释/浓缩，本题是两种溶液混合。混合问题的关键：总溶质=两者溶质之和，总溶液=两者溶液之和。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2,'混合浓度 = 总溶质 ÷ 总溶液','#5a67d8',15);}}]},
+    {question:'要配制 500 克浓度 12% 的盐水，需要用浓度 20% 和浓度 5% 的盐水各多少克混合？',
+     hint:'十字交叉法',
+     steps:[
+       {title:'分析（十字交叉法）',text:'目标12%，浓20%比目标高8%，稀5%比目标低7%。浓:稀 = 7:8（反比）。浓液=500×(7/15)≈233g，稀液=500×(8/15)≈267g。验证：233×20%+267×5%=46.67+13.33=60g盐，60÷500=12% ✓',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,20,'十字交叉法','#5a67d8',15);U.label(c,w/2,45,'20% → 差 8% ↘','#3182ce',13);U.label(c,w/2,65,'          目标 12%','#2d3748',13);U.label(c,w/2,85,' 5% → 差 7% ↗','#e53e3e',13);U.label(c,w/2,110,'比例 浓:稀 = 7:8','#38a169',14);}},
+       {title:'与例题对比',text='例题是改变单一溶液的浓度，本题是配制定浓度混合液。十字交叉法是浓度问题的进阶工具。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2,'十字交叉法适用于"配液"问题','#5a67d8',14);U.label(c,w/2,h/2+30,'是对比例思维的灵活运用','#4a5568',13);}}]}
+  ],
+  analysis:{
+    similarities:[
+      '核心不变量：溶质（盐、糖等）在加水或蒸发过程中保持不变',
+      '基本公式：浓度 = 溶质 ÷ 溶液 × 100%',
+      '变化规律：加水稀释浓度降低，蒸发浓缩浓度升高',
+      '最终都转化为除法计算：总溶质 ÷ 总溶液 = 浓度',
+      '都可以用条形图或烧杯图来直观表示溶液和溶质的关系'
+    ],
+    differences:[
+      '变形题1（蒸发浓缩）：和例题方向相反（加水vs蒸发），但思路对称',
+      '变形题2（混合溶液）：从单一溶液变为两种溶液混合，需要先求总溶质和总溶液',
+      '变形题3（配液/十字交叉）：是浓度问题的最高级形式，需要确定两种原液的混合比例——引入"十字交叉法"',
+      '难度递进：单一溶液稀释/浓缩 → 两种溶液混合求浓度 → 给定目标浓度求配比',
+      '十字交叉法本质是加权平均的逆运算，需要较强的逆向思维和比例感'
+    ]
+  }
+},
+
+// ==================== 12. 牛吃草问题 ====================
+{
+  id:'cow-grass', name:'牛吃草问题', icon:'🐄',
+  example:{
+    question:'一片草地，每天匀速生长。27 头牛 6 天可以吃完；23 头牛 9 天可以吃完。21 头牛几天可以吃完？',
+    steps:[
+      {title:'第①步：设定单位，求草的生长速度',
+       text:'设每头牛每天吃 1 份草。原有草量 + 6天生长的草 = 27×6 = 162 份。原有草量 + 9天生长的草 = 23×9 = 207 份。相减：3 天长草 207−162 = 45 份。每天长草 = 45÷3 = 15 份。',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,30,'27头6天：162 份','#3182ce',14);
+         U.label(c,w/2,55,'23头9天：207 份','#e53e3e',14);
+         U.label(c,w/2,85,'差：207−162=45（多3天）','#ed8936',14);
+         U.label(c,w/2,115,'每天长草：45÷3=15 份','#38a169',16);
+       }},
+      {title:'第②步：求原有草量',
+       text:'原有草量 = 162 − 15×6 = 162 − 90 = 72 份。（用第二组数据验证：207−15×9=207−135=72 ✓）',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,50,'原有草 = 总草 − 生长草','#5a67d8',15);
+         U.label(c,w/2,85,'= 162 − 15×6 = 72 份','#38a169',16);
+         U.label(c,w/2,115,'验证：207−15×9 = 72 ✓','#4a5568',13);
+       }},
+      {title:'第③步：21头牛可吃几天',
+       text:'每天：牛吃 21 份，草长 15 份。净消耗 = 21−15 = 6 份/天。吃完天数 = 72 ÷ 6 = 12 天。验证：12天牛吃21×12=252份=原有72+生长15×12=180+72=252 ✓',
+       draw(c,w,h){ U.clear(c,w,h);
+         U.label(c,w/2,35,'每天净消耗：21−15=6 份','#e53e3e',14);
+         U.label(c,w/2,65,'天数 = 72 ÷ 6 = 12 天','#38a169',18);
+         U.label(c,w/2,100,'21头12天吃 252 份','#4a5568',13);
+         U.label(c,w/2,120,'= 原有72 + 生长180 ✓','#4a5568',13);
+       }}
+    ]
+  },
+  variants:[
+    {question:'一片草地，每天匀速生长。24头牛6天吃完，21头牛8天吃完。18头牛几天吃完？',
+     hint:'数字变化',
+     steps:[
+       {title:'分析',text:'原有+6天=24×6=144，原有+8天=21×8=168。差：2天长24份→每天长12份。原有=144−12×6=72。净消耗=18−12=6，天=72÷6=12天。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2-10,'24×6=144, 21×8=168','#3182ce',14);U.label(c,w/2,h/2+15,'每天长12, 原有72','#5a67d8',14);U.label(c,w/2,h/2+40,'18头→12天','#38a169',16);}}]},
+    {question:'一片草地，每天匀速枯萎。10头牛8天吃完，8头牛12天吃完。6头牛几天吃完？',
+     hint:'草在减少',
+     steps:[
+       {title:'分析',text:'草在枯萎（而非生长），每天减少。原有+8×(−k)=80，原有+12×(−k)=96。相减：4天消耗=96−80=16→16=4k→k=4（每天枯4份）。原有=80+8×4=112。6头+草枯4份=每天去10份，112÷10=11.2天。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,25,'草在减少!','#e53e3e',14);U.label(c,w/2,50,'每天枯萎 4 份','#ed8936',14);U.label(c,w/2,75,'原有 112 份','#5a67d8',14);U.label(c,w/2,105,'6头：112÷10=11.2天','#38a169',15);}},
+       {title:'与例题对比',text='例题中草在生长（正增量），本题草在枯萎（负增量）。公式从"净消耗=牛吃−草长"变为"净消耗=牛吃+枯萎"。对称结构，但需要注意符号。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/4,h/2,'生长','#3182ce',14);U.label(c,w/4,h/2+25,'净=吃−长','#4a5568',13);U.label(c,w*3/4,h/2,'枯萎','#e53e3e',14);U.label(c,w*3/4,h/2+25,'净=吃+枯','#4a5568',13);}}]},
+    {question:'一片草地，每天匀速生长。如果放 25 头牛，10 天吃完；如果放 30 头牛，则 6 天吃完。如果要 4 天吃完，需要放多少头牛？',
+     hint:'求牛数',
+     steps:[
+       {title:'分析',text:'原有+10天=250，原有+6天=180。4天长70→每天长17.5。原有=250−175=75份。设需x头，则 4x = 75 + 17.5×4 = 75+70 = 145 → x = 36.25 头，取整需 37 头。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,25,'每天长 17.5 份，原有 75 份','#5a67d8',14);U.label(c,w/2,55,'4x = 75+70 = 145','#2d3748',15);U.label(c,w/2,85,'x ≈ 37 头','#38a169',16);}},
+       {title:'与例题对比',text='例题已知牛数求天数，本题已知天数求牛数。公式方向相反，但核心步骤相同：先求生长速度和原有量，再代入公式。',
+        draw(c,w,h){U.clear(c,w,h);U.label(c,w/2,h/2,'核心两步不变','#5a67d8',15);U.label(c,w/2,h/2+25,'①求生长速度+原有量','#3182ce',14);U.label(c,w/2,h/2+50,'②代入公式求解','#e53e3e',14);}}]}
+  ],
+  analysis:{
+    similarities:[
+      '都需要先设每头牛每天吃草量为 1 份（标准化）',
+      '核心步骤：两组数据求差 → 得生长/枯萎速度 → 求原有量 → 代入公式',
+      '都涉及"动态平衡"：牛吃草的速度 vs 草变化的速度',
+      '等量关系：总草量 = 原有量 + 每天变化量 × 天数',
+      '验证方法：将求得的天数代入两组数据中检查一致性'
+    ],
+    differences:[
+      '变形题1（数字变化）：纯数值替换，结构完全一致',
+      '变形题2（草枯萎）：从"生长"变为"枯萎"，方向相反，净消耗公式从"吃−长"变为"吃+枯"',
+      '变形题3（求牛数）：从"已知牛数求天数"变为"已知天数求牛数"，公式变形但步骤相同',
+      '生长问题中牛太少可能永远吃不完（净消耗≤0），枯萎问题中一定吃得完——生活含义不同',
+      '这类问题的难点在于"草在变化"这个动态要素，所有变形都围绕这一核心特点展开'
+    ]
+  }
+}
+];
+// ============================================================
+// END OF PROBLEM DATA
+// ============================================================
+
+// Build sidebar + homepage grid
+const typeList = document.getElementById('typeList');
+const typeGrid = document.getElementById('typeGrid');
+TYPES.forEach((t, i) => {
+  // Sidebar
+  const li = document.createElement('li');
+  li.className = 'type-item';
+  li.dataset.index = i;
+  li.innerHTML = `<span class="icon">${t.icon}</span>${t.name}`;
+  li.addEventListener('click', () => selectType(i, li));
+  typeList.appendChild(li);
+  
+  // Homepage grid card
+  const card = document.createElement('div');
+  card.className = 'type-card';
+  card.innerHTML = `<span class="tc-icon">${t.icon}</span><div class="tc-name">${t.name}</div><div class="tc-example">${t.example.question.slice(0,30)}...</div>`;
+  card.addEventListener('click', () => {
+    const sidebarItem = typeList.querySelectorAll('.type-item')[i];
+    selectType(i, sidebarItem);
+  });
+  typeGrid.appendChild(card);
+});
+
+// State
+let currentType = -1;
+let currentStep = 0;
+let currentVariant = 0;
+let variantSteps = {}; // variantStep[varIdx] = current step
+
+// Render
+function selectType(idx, liEl) {
+  document.querySelectorAll('.type-item').forEach(el => el.classList.remove('active'));
+  if (liEl) liEl.classList.add('active');
+  currentType = idx;
+  currentStep = 0;
+  currentVariant = 0;
+  variantSteps = {};
+  document.getElementById('welcome').style.display = 'none';
+  const content = document.getElementById('content');
+  content.classList.add('visible');
+  renderAll();
+}
+
+function renderAll() {
+  const t = TYPES[currentType];
+  if (!t) return;
+  const content = document.getElementById('content');
+  try {
+  content.innerHTML = `
+    <div class="type-header">
+      <h2><span class="t-icon">${t.icon}</span>${t.name}</h2>
+      <div class="subtitle">小学数学应用题 · 图形化分步解析</div>
+    </div>
+
+    <!-- Example -->
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>📋 例题</div>
+      <div class="question-box">${t.example.question}</div>
+      <div class="step-title" id="stepTitle">${t.example.steps[0]?.title || ''}</div>
+      <div class="canvas-wrap"><canvas id="exampleCanvas" width="700" height="280"></canvas></div>
+      <div class="step-controls">
+        <button class="step-btn" id="prevBtn" onclick="prevStep()">← 上一步</button>
+        <span class="step-indicator" id="stepIndicator">第 1/${t.example.steps.length} 步</span>
+        <button class="step-btn" id="nextBtn" onclick="nextStep()">下一步 →</button>
+      </div>
+      <div class="step-text" id="stepText">${t.example.steps[0]?.text || ''}</div>
+    </div>
+
+    <!-- Variants -->
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent)"></span>🔀 变形题（3 道）</div>
+      <div class="variants-tabs" id="variantTabs">
+        ${t.variants.map((v,i)=>`
+          <button class="variant-tab${i===0?' active':''}" onclick="switchVariant(${i})">
+            变形题${i+1}<span class="v-hint">${v.hint}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div id="variantPanels">
+        ${t.variants.map((v,i)=>`
+          <div class="variant-panel${i===0?' active':''}" id="vPanel${i}">
+            <div class="variant-header"><span class="v-badge">变形${i+1}</span>${v.question}</div>
+            <div class="step-title" id="vStepTitle${i}">${v.steps[0]?.title || ''}</div>
+            <div class="canvas-wrap"><canvas id="vCanvas${i}" width="700" height="220"></canvas></div>
+            <div class="step-controls">
+              <button class="step-btn" onclick="prevVariantStep(${i})">← 上一步</button>
+              <span class="step-indicator" id="vStepInd${i}">第 1/${v.steps.length} 步</span>
+              <button class="step-btn" onclick="nextVariantStep(${i})">下一步 →</button>
+            </div>
+            <div class="step-text" id="vStepText${i}">${v.steps[0]?.text || ''}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Analysis -->
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>💡 题型分析：相似点 & 不同点</div>
+      <div class="analysis-grid">
+        <div class="analysis-col sim">
+          <h4>✅ 相同点</h4>
+          <ol>${t.analysis.similarities.map(s=>`<li>${s}</li>`).join('')}</ol>
+        </div>
+        <div class="analysis-col diff">
+          <h4>❌ 不同点</h4>
+          <ol>${t.analysis.differences.map(s=>`<li>${s}</li>`).join('')}</ol>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Initialize variant steps
+  t.variants.forEach((_, i) => { variantSteps[i] = 0; });
+  
+  // Draw
+  drawExample();
+  t.variants.forEach((_, i) => drawVariant(i));
+  } catch (err) {
+    content.innerHTML = '<div class="card" style="color:red;padding:20px">❌ 渲染错误: ' + err.message + '<br><small>请按 F12 查看控制台</small></div>';
+    console.error('renderAll error:', err);
+  }
+}
+
+// ---- Example drawing ----
+function drawExample() {
+  const t = TYPES[currentType];
+  if (!t) return;
+  const canvas = document.getElementById('exampleCanvas');
+  if (!canvas) return;
+  const w = canvas.width, h = canvas.height;
+  const step = t.example.steps[currentStep];
+  document.getElementById('stepTitle').textContent = step.title;
+  document.getElementById('stepText').textContent = step.text;
+  document.getElementById('stepIndicator').textContent = `第 ${currentStep+1}/${t.example.steps.length} 步`;
+  document.getElementById('prevBtn').disabled = currentStep === 0;
+  document.getElementById('nextBtn').disabled = currentStep === t.example.steps.length - 1;
+  step.draw(canvas.getContext('2d'), w, h);
+}
+
+function prevStep() { if(currentStep>0){currentStep--;drawExample();} }
+function nextStep() { const t=TYPES[currentType]; if(currentStep<t.example.steps.length-1){currentStep++;drawExample();} }
+
+// ---- Variant drawing ----
+function drawVariant(vi) {
+  const t = TYPES[currentType];
+  if (!t) return;
+  const canvas = document.getElementById('vCanvas'+vi);
+  if (!canvas) return;
+  const w = canvas.width, h = canvas.height;
+  const vs = variantSteps[vi] || 0;
+  const step = t.variants[vi].steps[vs];
+  const stEl=document.getElementById('vStepTitle'+vi);
+  const txtEl=document.getElementById('vStepText'+vi);
+  const indEl=document.getElementById('vStepInd'+vi);
+  if(stEl) stEl.textContent = step.title;
+  if(txtEl) txtEl.textContent = step.text;
+  if(indEl) indEl.textContent = `第 ${vs+1}/${t.variants[vi].steps.length} 步`;
+  step.draw(canvas.getContext('2d'), w, h);
+}
+
+function switchVariant(vi) {
+  currentVariant = vi;
+  document.querySelectorAll('.variant-tab').forEach((el,i)=>el.classList.toggle('active',i===vi));
+  document.querySelectorAll('.variant-panel').forEach((el,i)=>el.classList.toggle('active',i===vi));
+  if (variantSteps[vi] === undefined) variantSteps[vi] = 0;
+  drawVariant(vi);
+}
+
+function prevVariantStep(vi) {
+  if ((variantSteps[vi]||0) > 0) { variantSteps[vi]--; drawVariant(vi); }
+}
+function nextVariantStep(vi) {
+  const t = TYPES[currentType];
+  if ((variantSteps[vi]||0) < t.variants[vi].steps.length - 1) { variantSteps[vi]++; drawVariant(vi); }
+}
+
+// Init: show welcome grid (don't auto-select)
+</script>
+</body>
+</html>

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>绳子对折剪开 - 交互演示</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  background: #f5f6fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 780px;
+  overflow: hidden;
+}
+
+.header {
+  background: linear-gradient(135deg, #4c6ef5 0%, #4263eb 100%);
+  color: #fff;
+  padding: 24px 32px;
+  text-align: center;
+}
+.header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.header .subtitle { font-size: 0.9rem; opacity: 0.85; }
+
+.canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  background: #fafbfc;
+  border-bottom: 1px solid #e8ebf0;
+}
+.canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Step title overlay on canvas */
+.step-title {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.92);
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a1d26;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  pointer-events: none;
+  transition: all 0.3s;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px 32px;
+}
+.step-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 2px solid #dde0e8;
+  background: #fff;
+  color: #5a6070;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.step-btn:hover:not(:disabled) {
+  border-color: #4c6ef5;
+  color: #4c6ef5;
+  box-shadow: 0 2px 8px rgba(76,110,245,0.2);
+}
+.step-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+.step-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #dde0e8;
+  transition: all 0.3s;
+}
+.dot.active {
+  background: #4c6ef5;
+  transform: scale(1.4);
+  box-shadow: 0 0 6px rgba(76,110,245,0.4);
+}
+.dot.done {
+  background: #a5b4fc;
+}
+.step-counter {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #9ca3af;
+  min-width: 50px;
+  text-align: center;
+}
+
+/* Answer reveal */
+.answer-area {
+  padding: 0 32px 24px;
+  text-align: center;
+}
+.answer-box {
+  display: inline-block;
+  background: #ecfdf5;
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 14px 32px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: all 0.5s ease;
+}
+.answer-box.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.answer-box .answer-label { font-size: 0.85rem; color: #6b7280; }
+.answer-box .answer-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #059669;
+  line-height: 1.2;
+}
+.answer-box .answer-note { font-size: 0.8rem; color: #9ca3af; margin-top: 2px; }
+
+/* Keyboard hint */
+.kbd-hint {
+  text-align: center;
+  padding: 0 32px 16px;
+  font-size: 0.75rem;
+  color: #c0c5ce;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .header { padding: 16px 20px; }
+  .header h1 { font-size: 1.2rem; }
+  .canvas-wrap { height: 320px; }
+  .controls { padding: 14px 16px; gap: 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>绳子对折问题</h1>
+    <p class="subtitle">把一根绳子对折、对折、再对折，从中间剪开 —— 会被剪成多少段？</p>
+  </div>
+
+  <div class="canvas-wrap" id="canvas-wrap">
+    <canvas id="main-canvas"></canvas>
+    <div class="step-title" id="step-title">初始绳子</div>
+  </div>
+
+  <div class="controls">
+    <button class="step-btn" id="btn-prev" disabled title="上一步">◀</button>
+    <div class="step-dots" id="step-dots"></div>
+    <span class="step-counter" id="step-counter">1 / 6</span>
+    <button class="step-btn" id="btn-next" title="下一步">▶</button>
+  </div>
+
+  <div class="answer-area">
+    <div class="answer-box" id="answer-box">
+      <div class="answer-label">最终答案</div>
+      <div class="answer-value">9 段</div>
+      <div class="answer-note">2³ + 1 = 9</div>
+    </div>
+  </div>
+
+  <div class="kbd-hint">使用 ← → 方向键或点击按钮切换步骤</div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('main-canvas');
+  const ctx = canvas.getContext('2d');
+  const wrap = document.getElementById('canvas-wrap');
+  const titleEl = document.getElementById('step-title');
+  const answerBox = document.getElementById('answer-box');
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  const stepCounter = document.getElementById('step-counter');
+  const dotsContainer = document.getElementById('step-dots');
+
+  let W, H, currentStep = 0;
+  const TOTAL_STEPS = 6;
+
+  // Create dot indicators
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.dataset.index = i;
+    dot.addEventListener('click', () => goToStep(i));
+    dotsContainer.appendChild(dot);
+  }
+
+  const stepTitles = [
+    '① 初始绳子 —— 1 段',
+    '② 第 1 次对折 —— 2 层',
+    '③ 第 2 次对折 —— 4 层',
+    '④ 第 3 次对折 —— 8 层',
+    '⑤ 在折痕中间剪开 ✂',
+    '⑥ 展开绳子、数一数',
+  ];
+
+  const stepDescs = [
+    '一根完整的绳子，两端分别为 A 和 B。',
+    '从中间对折，绳子变成 U 形，共 2 层重叠。',
+    '再对折一次，U 形再折半 → 共 4 层重叠。',
+    '第三次对折，4 层再折半 → 共 8 层重叠。',
+    '在对折处（红色虚线）一刀剪下，剪断所有 8 层。',
+    '展开绳子，被剪断的地方变成了断口，数一数：共 9 段！',
+  ];
+
+  // Rope colors for layers
+  const LAYER_COLORS = [
+    '#f7d670', '#efc448', '#e8b830', '#e0a820',
+    '#d89c18', '#d09010', '#c88808', '#c08000',
+  ];
+
+  function resize() {
+    const rect = wrap.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio, 2);
+    W = rect.width;
+    H = rect.height;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function drawCenteredText(text, x, y, font, color) {
+    ctx.fillStyle = color || '#1a1d26';
+    ctx.font = font || '16px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+  }
+
+  function drawRoundRect(x, y, w, h, r, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
+  }
+
+  // ===== Drawing functions for each step =====
+
+  function drawRopeSegment(x, y, w, h, color, label) {
+    drawRoundRect(x - w / 2, y, w, h, h / 2, color, '#b89530');
+    if (label) {
+      drawCenteredText(label, x, y + h / 2, 'bold 12px system-ui', '#7a6020');
+    }
+  }
+
+  // Step 0: Initial rope
+  function drawInitial() {
+    const cx = W / 2, cy = H / 2, rw = W * 0.7, rh = 28;
+    drawRopeSegment(cx, cy - rh / 2, rw, rh, '#f0d78c', '1 段');
+    // Endpoint labels
+    drawCenteredText('端点 A', cx - rw / 2 - 10, cy, 'bold 14px system-ui', '#4c6ef5');
+    drawCenteredText('端点 B', cx + rw / 2 + 10, cy, 'bold 14px system-ui', '#e03131');
+    // Arrows pointing to ends
+    ctx.fillStyle = '#4c6ef5';
+    ctx.beginPath(); ctx.moveTo(cx - rw / 2 + 15, cy - 18); ctx.lineTo(cx - rw / 2 - 20, cy - 30); ctx.lineTo(cx - rw / 2 - 10, cy - 30); ctx.fill();
+    ctx.fillStyle = '#e03131';
+    ctx.beginPath(); ctx.moveTo(cx + rw / 2 - 15, cy - 18); ctx.lineTo(cx + rw / 2 + 20, cy - 30); ctx.lineTo(cx + rw / 2 + 10, cy - 30); ctx.fill();
+    // Description
+    drawCenteredText(stepDescs[0], cx, cy + 60, '15px system-ui', '#5a6070');
+  }
+
+  // Step 1: Fold once → 2 layers
+  function drawFold1() {
+    const cx = W / 2, baseY = H / 2 - 45, rw = W * 0.45, rh = 24, gap = 40;
+    // Two layers
+    drawRopeSegment(cx, baseY, rw, rh, LAYER_COLORS[0], '层1');
+    drawRopeSegment(cx, baseY + gap, rw, rh, LAYER_COLORS[1], '层2');
+    // Left connector (uncut end)
+    ctx.strokeStyle = '#c4a44a';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(cx - rw / 2, baseY + gap / 2, gap / 2, -Math.PI / 2, Math.PI / 2);
+    ctx.stroke();
+    // Fold mark on right
+    ctx.setLineDash([8, 5]);
+    ctx.strokeStyle = '#e03131';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(cx + rw / 2, baseY - 10);
+    ctx.lineTo(cx + rw / 2, baseY + gap + rh + 10);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawCenteredText('折痕', cx + rw / 2 + 28, baseY + gap / 2, 'bold 13px system-ui', '#e03131');
+    drawCenteredText('（将来剪开的位置）', cx + rw / 2 + 28, baseY + gap / 2 + 18, '11px system-ui', '#9ca3af');
+    // Labels
+    drawCenteredText('2 层', cx, baseY - 35, 'bold 18px system-ui', '#5a6070');
+    drawCenteredText(stepDescs[1], cx, baseY + gap + rh + 40, '15px system-ui', '#5a6070');
+  }
+
+  // Step 2: Fold twice → 4 layers
+  function drawFold2() {
+    const cx = W / 2, baseY = H / 2 - 80, rw = W * 0.3, rh = 20, gap = 26;
+    for (let i = 0; i < 4; i++) {
+      drawRopeSegment(cx, baseY + i * gap, rw, rh, LAYER_COLORS[i], '层' + (i + 1));
+    }
+    // Left connector
+    ctx.strokeStyle = '#c4a44a';
+    ctx.lineWidth = 4;
+    const leftX = cx - rw / 2;
+    ctx.beginPath();
+    ctx.arc(leftX, baseY + 1.5 * gap, gap * 1.5, -Math.PI / 2, Math.PI / 2);
+    ctx.stroke();
+    // Fold mark
+    ctx.setLineDash([8, 5]);
+    ctx.strokeStyle = '#e03131';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(cx + rw / 2, baseY - 12);
+    ctx.lineTo(cx + rw / 2, baseY + 3 * gap + rh + 12);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawCenteredText('折痕', cx + rw / 2 + 22, baseY + 1.5 * gap, 'bold 13px system-ui', '#e03131');
+    drawCenteredText('4 层', cx, baseY - 35, 'bold 18px system-ui', '#5a6070');
+    drawCenteredText(stepDescs[2], cx, baseY + 4 * gap + 35, '15px system-ui', '#5a6070');
+  }
+
+  // Step 3: Fold three times → 8 layers
+  function drawFold3() {
+    const cx = W / 2, baseY = H / 2 - 100, rw = W * 0.22, rh = 14, gap = 20;
+    for (let i = 0; i < 8; i++) {
+      drawRopeSegment(cx, baseY + i * gap, rw, rh, LAYER_COLORS[i], '层' + (i + 1));
+    }
+    // Left connector
+    ctx.strokeStyle = '#c4a44a';
+    ctx.lineWidth = 3;
+    const leftX = cx - rw / 2;
+    ctx.beginPath();
+    ctx.arc(leftX, baseY + 3.5 * gap, gap * 3.5, -Math.PI / 2, Math.PI / 2);
+    ctx.stroke();
+    // Fold mark
+    ctx.setLineDash([8, 5]);
+    ctx.strokeStyle = '#e03131';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(cx + rw / 2, baseY - 10);
+    ctx.lineTo(cx + rw / 2, baseY + 7 * gap + rh + 10);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawCenteredText('折痕', cx + rw / 2 + 20, baseY + 3.5 * gap, 'bold 12px system-ui', '#e03131');
+    drawCenteredText('8 层', cx, baseY - 30, 'bold 18px system-ui', '#5a6070');
+    drawCenteredText(stepDescs[3], cx, baseY + 8 * gap + 30, '15px system-ui', '#5a6070');
+  }
+
+  // Step 4: Cut through all layers
+  function drawCut() {
+    const cx = W / 2, baseY = H / 2 - 100, rw = W * 0.22, rh = 14, gap = 20;
+    // Draw the 8 layers with break at the cut point
+    for (let i = 0; i < 8; i++) {
+      const y = baseY + i * gap;
+      // Left piece (from left to fold)
+      drawRoundRect(cx - rw / 2, y, rw * 0.55, rh, rh / 2, LAYER_COLORS[i], '#b89530');
+      // Right piece (from fold to right - slightly offset to show cut)
+      drawRoundRect(cx + rw * 0.08, y, rw * 0.37, rh, rh / 2, LAYER_COLORS[i], '#e03131');
+      // Layer number on left piece
+      drawCenteredText('层' + (i + 1), cx - rw / 2 + rw * 0.28, y + rh / 2, 'bold 10px system-ui', '#7a6020');
+    }
+    // Left connector
+    const leftX = cx - rw / 2;
+    ctx.strokeStyle = '#c4a44a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(leftX, baseY + 3.5 * gap, gap * 3.5, -Math.PI / 2, Math.PI / 2);
+    ctx.stroke();
+    // Cut line (scissors cut mark)
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = '#e03131';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx + rw * 0.05, baseY - 15);
+    ctx.lineTo(cx + rw * 0.05, baseY + 7 * gap + rh + 15);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Scissors emoji
+    ctx.font = '36px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('✂', cx + rw * 0.05, baseY - 28);
+    // "Cut here" label
+    drawCenteredText('一刀剪开所有8层！', cx + rw / 2 + 30, baseY + 3.5 * gap, 'bold 14px system-ui', '#e03131');
+    drawCenteredText('8 层', cx, baseY - 30, 'bold 18px system-ui', '#5a6070');
+    drawCenteredText(stepDescs[4], cx, baseY + 8 * gap + 30, '15px system-ui', '#5a6070');
+  }
+
+  // Step 5: Unfold and count
+  function drawResult() {
+    const cx = W / 2, baseY = H / 2 - 40;
+    const segW = 54, segH = 24, segGap = 12;
+    const totalW = 9 * segW + 8 * segGap;
+    const startX = cx - totalW / 2;
+
+    // Draw 9 segments
+    const segColors = [
+      '#f7d670','#f0c84a','#e8b830','#e0a818',
+      '#d89c10','#d09008','#c88400','#c07800','#b87000'
+    ];
+
+    for (let i = 0; i < 9; i++) {
+      const x = startX + i * (segW + segGap);
+      const color = segColors[i];
+      drawRoundRect(x, baseY, segW, segH, segH / 2, color, '#b89530');
+      drawCenteredText('段' + (i + 1), x + segW / 2, baseY + segH / 2, 'bold 12px system-ui', '#7a6020');
+      // Number below
+      drawCenteredText('' + (i + 1), x + segW / 2, baseY + segH + 20, 'bold 14px system-ui', '#5a6070');
+    }
+
+    // Result badge
+    drawRoundRect(cx - 70, baseY + segH + 50, 140, 40, 20, '#ecfdf5', '#34d399');
+    drawCenteredText('🎉 共 9 段！', cx, baseY + segH + 70, 'bold 20px system-ui', '#059669');
+
+    // Formula
+    drawCenteredText('规律：对折 n 次后剪开 → 2ⁿ + 1 段', cx, baseY + segH + 105, '15px system-ui', '#6b7280');
+    drawCenteredText('这里 n=3：2³ + 1 = 9', cx, baseY + segH + 128, '14px system-ui', '#9ca3af');
+  }
+
+  const drawFns = [drawInitial, drawFold1, drawFold2, drawFold3, drawCut, drawResult];
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+    // Background grid
+    ctx.strokeStyle = '#eef1f5';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    if (drawFns[currentStep]) {
+      drawFns[currentStep]();
+    }
+
+    // Update UI
+    titleEl.textContent = stepTitles[currentStep];
+    btnPrev.disabled = currentStep === 0;
+    btnNext.disabled = currentStep === TOTAL_STEPS - 1;
+    stepCounter.textContent = (currentStep + 1) + ' / ' + TOTAL_STEPS;
+
+    // Dots
+    document.querySelectorAll('.dot').forEach((d, i) => {
+      d.classList.toggle('active', i === currentStep);
+      d.classList.toggle('done', i < currentStep);
+    });
+
+    // Show answer only on last step
+    if (currentStep === TOTAL_STEPS - 1) {
+      answerBox.classList.add('show');
+    } else {
+      answerBox.classList.remove('show');
+    }
+  }
+
+  function goToStep(step) {
+    currentStep = Math.max(0, Math.min(TOTAL_STEPS - 1, step));
+    render();
+  }
+
+  btnPrev.addEventListener('click', () => goToStep(currentStep - 1));
+  btnNext.addEventListener('click', () => goToStep(currentStep + 1));
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); goToStep(currentStep + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); goToStep(currentStep - 1); }
+  });
+
+  // Touch swipe support
+  let touchStartX = 0;
+  wrap.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+  wrap.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) {
+      goToStep(currentStep + (dx < 0 ? 1 : -1));
+    }
+  });
+
+  // Init
+  resize();
+  render();
+  window.addEventListener('resize', () => { resize(); render(); });
+})();
+</script>
+</body>
+</html>
